@@ -14,8 +14,8 @@ from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
 from magic_pdf.rw.DiskReaderWriter import DiskReaderWriter
 from magic_pdf.tools.common import do_parse, prepare_env
 
-os.system("pip install gradio")
-os.system("pip install gradio-pdf")
+# os.system("pip install gradio")
+# os.system("pip install gradio-pdf")
 import gradio as gr
 from gradio_pdf import PDF
 
