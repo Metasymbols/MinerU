@@ -82,7 +82,8 @@ class MagicModel:
                         9,
                     ] and layout_det2['category_id'] in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
                         if (
-                            calculate_iou(layout_det1['bbox'], layout_det2['bbox'])
+                            calculate_iou(
+                                layout_det1['bbox'], layout_det2['bbox'])
                             > 0.9
                         ):
                             if layout_det1['score'] < layout_det2['score']:
@@ -144,7 +145,8 @@ class MagicModel:
                     if pos_flag_count > 1:
                         continue
                     dis_figure_footnote[i] = min(
-                        bbox_distance(figures[j]['bbox'], footnotes[i]['bbox']),
+                        bbox_distance(figures[j]['bbox'],
+                                      footnotes[i]['bbox']),
                         dis_figure_footnote.get(i, float('inf')),
                     )
             for i in range(len(footnotes)):
@@ -251,9 +253,11 @@ class MagicModel:
             )
 
             object_area = abs(
-                all_bboxes[object_idx]['bbox'][2] - all_bboxes[object_idx]['bbox'][0]
+                all_bboxes[object_idx]['bbox'][2] -
+                all_bboxes[object_idx]['bbox'][0]
             ) * abs(
-                all_bboxes[object_idx]['bbox'][3] - all_bboxes[object_idx]['bbox'][1]
+                all_bboxes[object_idx]['bbox'][3] -
+                all_bboxes[object_idx]['bbox'][1]
             )
 
             for i in range(len(all_bboxes)):
@@ -350,7 +354,8 @@ class MagicModel:
                     dis[j][i] = dis[i][j]
                     continue
 
-                dis[i][j] = bbox_distance(all_bboxes[i]['bbox'], all_bboxes[j]['bbox'])
+                dis[i][j] = bbox_distance(
+                    all_bboxes[i]['bbox'], all_bboxes[j]['bbox'])
                 dis[j][i] = dis[i][j]
 
         used = set()
@@ -385,9 +390,11 @@ class MagicModel:
                     all_bboxes[i]['bbox'], all_bboxes[j]['bbox']
                 )  # 由  pos_flag_count 相关逻辑保证本段逻辑准确性
                 if left or right:
-                    one_way_dis = all_bboxes[i]['bbox'][2] - all_bboxes[i]['bbox'][0]
+                    one_way_dis = all_bboxes[i]['bbox'][2] - \
+                        all_bboxes[i]['bbox'][0]
                 else:
-                    one_way_dis = all_bboxes[i]['bbox'][3] - all_bboxes[i]['bbox'][1]
+                    one_way_dis = all_bboxes[i]['bbox'][3] - \
+                        all_bboxes[i]['bbox'][1]
                 if dis[i][j] > one_way_dis:
                     continue
                 arr.append((dis[i][j], j))
@@ -479,10 +486,14 @@ class MagicModel:
                         embed_arr.append(idx)
 
                 if len(embed_arr) > 0:
-                    embed_x0 = min([all_bboxes[idx]['bbox'][0] for idx in embed_arr])
-                    embed_y0 = min([all_bboxes[idx]['bbox'][1] for idx in embed_arr])
-                    embed_x1 = max([all_bboxes[idx]['bbox'][2] for idx in embed_arr])
-                    embed_y1 = max([all_bboxes[idx]['bbox'][3] for idx in embed_arr])
+                    embed_x0 = min([all_bboxes[idx]['bbox'][0]
+                                   for idx in embed_arr])
+                    embed_y0 = min([all_bboxes[idx]['bbox'][1]
+                                   for idx in embed_arr])
+                    embed_x1 = max([all_bboxes[idx]['bbox'][2]
+                                   for idx in embed_arr])
+                    embed_y1 = max([all_bboxes[idx]['bbox'][3]
+                                   for idx in embed_arr])
                     caption_areas.append(
                         int(abs(embed_x1 - embed_x0) * abs(embed_y1 - embed_y0))
                     )
@@ -513,16 +524,20 @@ class MagicModel:
 
             if len(subject_object_relation_map[i]) > 0:
                 x0 = min(
-                    [all_bboxes[j]['bbox'][0] for j in subject_object_relation_map[i]]
+                    [all_bboxes[j]['bbox'][0]
+                        for j in subject_object_relation_map[i]]
                 )
                 y0 = min(
-                    [all_bboxes[j]['bbox'][1] for j in subject_object_relation_map[i]]
+                    [all_bboxes[j]['bbox'][1]
+                        for j in subject_object_relation_map[i]]
                 )
                 x1 = max(
-                    [all_bboxes[j]['bbox'][2] for j in subject_object_relation_map[i]]
+                    [all_bboxes[j]['bbox'][2]
+                        for j in subject_object_relation_map[i]]
                 )
                 y1 = max(
-                    [all_bboxes[j]['bbox'][3] for j in subject_object_relation_map[i]]
+                    [all_bboxes[j]['bbox'][3]
+                        for j in subject_object_relation_map[i]]
                 )
                 result['object_body'] = [x0, y0, x1, y1]
                 result['all'] = [
@@ -627,15 +642,18 @@ class MagicModel:
         return inline_equations, interline_equations, interline_equations_blocks
 
     def get_discarded(self, page_no: int) -> list:  # 自研模型，只有坐标
-        blocks = self.__get_blocks_by_type(ModelBlockTypeEnum.ABANDON.value, page_no)
+        blocks = self.__get_blocks_by_type(
+            ModelBlockTypeEnum.ABANDON.value, page_no)
         return blocks
 
     def get_text_blocks(self, page_no: int) -> list:  # 自研模型搞的，只有坐标，没有字
-        blocks = self.__get_blocks_by_type(ModelBlockTypeEnum.PLAIN_TEXT.value, page_no)
+        blocks = self.__get_blocks_by_type(
+            ModelBlockTypeEnum.PLAIN_TEXT.value, page_no)
         return blocks
 
     def get_title_blocks(self, page_no: int) -> list:  # 自研模型，只有坐标，没字
-        blocks = self.__get_blocks_by_type(ModelBlockTypeEnum.TITLE.value, page_no)
+        blocks = self.__get_blocks_by_type(
+            ModelBlockTypeEnum.TITLE.value, page_no)
         return blocks
 
     def get_ocr_text(self, page_no: int) -> list:  # paddle 搞的，有字也有坐标
@@ -673,7 +691,8 @@ class MagicModel:
         for layout_det in layout_dets:
             category_id = layout_det['category_id']
             if category_id in allow_category_id_list:
-                span = {'bbox': layout_det['bbox'], 'score': layout_det['score']}
+                span = {'bbox': layout_det['bbox'],
+                        'score': layout_det['score']}
                 if category_id == 3:
                     span['type'] = ContentType.Image
                 elif category_id == 5:

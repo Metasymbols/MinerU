@@ -25,58 +25,109 @@ from magic_pdf.pre_proc.resolve_bbox_conflict import check_useful_block_horizont
 
 
 def remove_horizontal_overlap_block_which_smaller(all_bboxes):
+    """
+    移除水平方向上较小的重叠框
+    
+    此函数的目的是从一组边界框中移除那些在水平方向上重叠且面积较小的框。
+    它首先创建一个列表，其中只包含每个边界框的前四个元素（假设这四个元素定义了框的位置和大小）。
+    然后，它检查这些框是否有水平重叠。如果有重叠，且有一个框比另一个框小，则移除较小的框。
+    
+    参数:
+    all_bboxes: 包含多个边界框的列表，每个边界框由五个或更多元素组成，前四个元素定义了框的位置和大小。
+    
+    返回:
+    is_useful_block_horz_overlap: 布尔值，指示是否有水平重叠的框被移除。
+    all_bboxes: 更新后的边界框列表，已经移除了较小的重叠框（如果有的话）。
+    """
+    # 初始化一个列表，用于存储不包括最后一个元素的每个边界框
     useful_blocks = []
     for bbox in all_bboxes:
         useful_blocks.append({
             "bbox": bbox[:4]
         })
-    is_useful_block_horz_overlap, smaller_bbox, bigger_bbox = check_useful_block_horizontal_overlap(useful_blocks)
+    
+    # 检查是否有水平方向的重叠框，并找出较小和较大的框
+    is_useful_block_horz_overlap, smaller_bbox, bigger_bbox = check_useful_block_horizontal_overlap(
+        useful_blocks)
+    
+    # 如果存在水平方向的重叠框，则记录日志并移除较小的框
     if is_useful_block_horz_overlap:
         logger.warning(
             f"skip this page, reason: {DropReason.USEFUL_BLOCK_HOR_OVERLAP}, smaller bbox is {smaller_bbox}, bigger bbox is {bigger_bbox}")
+        
+        # 遍历所有边界框的副本，以避免修改正在遍历的列表
         for bbox in all_bboxes.copy():
+            # 如果当前框与较小的重叠框相同，则移除该框
             if smaller_bbox == bbox[:4]:
                 all_bboxes.remove(bbox)
-
+    
+    # 返回是否移除了水平重叠的框以及更新后的边界框列表
     return is_useful_block_horz_overlap, all_bboxes
 
-
-def __replace_STX_ETX(text_str:str):
-    """ Replace \u0002 and \u0003, as these characters become garbled when extracted using pymupdf. In fact, they were originally quotation marks.
-Drawback: This issue is only observed in English text; it has not been found in Chinese text so far.
-
-    Args:
-        text_str (str): raw text
-
-    Returns:
-        _type_: replaced text
+def __replace_STX_ETX(text_str: str):
     """
+    替换 \u0002 和 \u0003，因为在使用pymupdf提取文本时这些字符会变得乱码。实际上它们原本是引号。
+    缺点：此问题仅在英文文本中出现；到目前为止在中文文本中尚未发现。
+
+    参数:
+        text_str (str): 原始文本
+
+    返回:
+        _type_: 替换后的文本
+    """
+    # 检查输入字符串是否非空
     if text_str:
+        # 将 \u0002 替换为单引号
         s = text_str.replace('\u0002', "'")
+        # 将 \u0003 替换为单引号
         s = s.replace("\u0003", "'")
         return s
+    # 如果输入字符串为空，则直接返回
     return text_str
 
-
 def txt_spans_extract(pdf_page, inline_equations, interline_equations):
-    text_raw_blocks = pdf_page.get_text("dict", flags=fitz.TEXTFLAGS_TEXT)["blocks"]
+    """
+    从PDF页面中提取文本跨度信息，处理数学公式和引用标记，并过滤掉无效的文本跨度。
+    
+    参数:
+    - pdf_page: PDF页面对象，用于获取文本块信息。
+    - inline_equations: 行内数学公式，用于在文本块中替换相应的数学公式。
+    - interline_equations: 行间数学公式，同inline_equations。
+    
+    返回:
+    - spans: 文本跨度列表，包含文本的边界框、内容和类型等信息。
+    """
+    # 获取PDF页面中的原始文本块信息
+    text_raw_blocks = pdf_page.get_text(
+        "dict", flags=fitz.TEXTFLAGS_TEXT)["blocks"]
+    # 获取字符级别文本块信息，用于后续的字符处理
     char_level_text_blocks = pdf_page.get_text("rawdict", flags=fitz.TEXTFLAGS_TEXT)[
         "blocks"
     ]
-    text_blocks = combine_chars_to_pymudict(text_raw_blocks, char_level_text_blocks)
+    # 将字符组合成PyMuPDF字典格式的文本块
+    text_blocks = combine_chars_to_pymudict(
+        text_raw_blocks, char_level_text_blocks)
+    # 在文本块中替换数学公式
     text_blocks = replace_equations_in_textblock(
         text_blocks, inline_equations, interline_equations
     )
+    # 移除文本块中的引用标记
     text_blocks = remove_citation_marker(text_blocks)
+    # 移除文本块中的特定字符
     text_blocks = remove_chars_in_text_blocks(text_blocks)
+    # 初始化文本跨度列表
     spans = []
+    # 遍历处理后的文本块，提取文本跨度信息
     for v in text_blocks:
         for line in v["lines"]:
             for span in line["spans"]:
                 bbox = span["bbox"]
+                # 跳过宽度或高度为0的文本跨度，因为它们可能是无效的
                 if float_equal(bbox[0], bbox[2]) or float_equal(bbox[1], bbox[3]):
                     continue
+                # 只处理普通文本类型的跨度，排除数学公式
                 if span.get('type') not in (ContentType.InlineEquation, ContentType.InterlineEquation):
+                    # 添加处理后的文本跨度到列表中
                     spans.append(
                         {
                             "bbox": list(span["bbox"]),
@@ -85,6 +136,7 @@ def txt_spans_extract(pdf_page, inline_equations, interline_equations):
                             "score": 1.0,
                         }
                     )
+    # 返回提取的文本跨度列表
     return spans
 
 
@@ -102,7 +154,8 @@ def parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, 
     discarded_blocks = magic_model.get_discarded(page_id)
     text_blocks = magic_model.get_text_blocks(page_id)
     title_blocks = magic_model.get_title_blocks(page_id)
-    inline_equations, interline_equations, interline_equation_blocks = magic_model.get_equations(page_id)
+    inline_equations, interline_equations, interline_equation_blocks = magic_model.get_equations(
+        page_id)
 
     page_w, page_h = magic_model.get_page_size(page_id)
 
@@ -121,11 +174,13 @@ def parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, 
         raise Exception("parse_mode must be txt or ocr")
 
     '''删除重叠spans中置信度较低的那些'''
-    spans, dropped_spans_by_confidence = remove_overlaps_low_confidence_spans(spans)
+    spans, dropped_spans_by_confidence = remove_overlaps_low_confidence_spans(
+        spans)
     '''删除重叠spans中较小的那些'''
     spans, dropped_spans_by_span_overlap = remove_overlaps_min_spans(spans)
     '''对image和table截图'''
-    spans = ocr_cut_image_and_table(spans, pdf_docs[page_id], page_id, pdf_bytes_md5, imageWriter)
+    spans = ocr_cut_image_and_table(
+        spans, pdf_docs[page_id], page_id, pdf_bytes_md5, imageWriter)
 
     '''将所有区块的bbox整理到一起'''
     # interline_equation_blocks参数不够准，后面切换到interline_equations上
@@ -144,12 +199,14 @@ def parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, 
         drop_reason.append(DropReason.OVERLAP_BLOCKS_CAN_NOT_SEPARATION)
 
     '''先处理不需要排版的discarded_blocks'''
-    discarded_block_with_spans, spans = fill_spans_in_blocks(all_discarded_blocks, spans, 0.4)
+    discarded_block_with_spans, spans = fill_spans_in_blocks(
+        all_discarded_blocks, spans, 0.4)
     fix_discarded_blocks = fix_discarded_block(discarded_block_with_spans)
 
     '''如果当前页面没有bbox则跳过'''
     if len(all_bboxes) == 0:
-        logger.warning(f"skip this page, not found useful bbox, page_id: {page_id}")
+        logger.warning(
+            f"skip this page, not found useful bbox, page_id: {page_id}")
         return ocr_construct_page_component_v2([], [], page_id, page_w, page_h, [],
                                                [], [], interline_equations, fix_discarded_blocks,
                                                need_drop, drop_reason)
@@ -157,7 +214,8 @@ def parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, 
     """在切分之前，先检查一下bbox是否有左右重叠的情况，如果有，那么就认为这个pdf暂时没有能力处理好，这种左右重叠的情况大概率是由于pdf里的行间公式、表格没有被正确识别出来造成的 """
 
     while True:  # 循环检查左右重叠的情况，如果存在就删除掉较小的那个bbox，直到不存在左右重叠的情况
-        is_useful_block_horz_overlap, all_bboxes = remove_horizontal_overlap_block_which_smaller(all_bboxes)
+        is_useful_block_horz_overlap, all_bboxes = remove_horizontal_overlap_block_which_smaller(
+            all_bboxes)
         if is_useful_block_horz_overlap:
             need_drop = True
             drop_reason.append(DropReason.USEFUL_BLOCK_HOR_OVERLAP)
@@ -166,7 +224,8 @@ def parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, 
 
     '''根据区块信息计算layout'''
     page_boundry = [0, 0, page_w, page_h]
-    layout_bboxes, layout_tree = get_bboxes_layout(all_bboxes, page_boundry, page_id)
+    layout_bboxes, layout_tree = get_bboxes_layout(
+        all_bboxes, page_boundry, page_id)
 
     if len(text_blocks) > 0 and len(all_bboxes) > 0 and len(layout_bboxes) == 0:
         logger.warning(
@@ -226,7 +285,8 @@ def pdf_parse_union(pdf_bytes,
 
     '''根据输入的起始范围解析pdf'''
     # end_page_id = end_page_id if end_page_id else len(pdf_docs) - 1
-    end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else len(pdf_docs) - 1
+    end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else len(
+        pdf_docs) - 1
 
     if end_page_id > len(pdf_docs) - 1:
         logger.warning("end_page_id is out of range, use pdf_docs length")
@@ -246,13 +306,14 @@ def pdf_parse_union(pdf_bytes,
 
         '''解析pdf中的每一页'''
         if start_page_id <= page_id <= end_page_id:
-            page_info = parse_page_core(pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, parse_mode)
+            page_info = parse_page_core(
+                pdf_docs, magic_model, page_id, pdf_bytes_md5, imageWriter, parse_mode)
         else:
             page_w = page.rect.width
             page_h = page.rect.height
             page_info = ocr_construct_page_component_v2([], [], page_id, page_w, page_h, [],
-                                                [], [], [], [],
-                                                True, "skip page")
+                                                        [], [], [], [],
+                                                        True, "skip page")
         pdf_info_dict[f"page_{page_id}"] = page_info
 
     """分段"""

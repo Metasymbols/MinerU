@@ -1,3 +1,8 @@
+from magic_pdf.model.ppTableModel import ppTableModel
+from magic_pdf.model.pek_sub_modules.structeqtable.StructTableModel import StructTableModel
+from magic_pdf.model.pek_sub_modules.self_modify import ModifiedPaddleOCR
+from magic_pdf.model.pek_sub_modules.post_process import get_croped_image, latex_rm_whitespace
+from magic_pdf.model.pek_sub_modules.layoutlmv3.model_init import Layoutlmv3_Predictor
 from loguru import logger
 import os
 import time
@@ -31,16 +36,11 @@ except ImportError as e:
         '"pip install magic-pdf[full] --extra-index-url https://myhloli.github.io/wheels/"')
     exit(1)
 
-from magic_pdf.model.pek_sub_modules.layoutlmv3.model_init import Layoutlmv3_Predictor
-from magic_pdf.model.pek_sub_modules.post_process import get_croped_image, latex_rm_whitespace
-from magic_pdf.model.pek_sub_modules.self_modify import ModifiedPaddleOCR
-from magic_pdf.model.pek_sub_modules.structeqtable.StructTableModel import StructTableModel
-from magic_pdf.model.ppTableModel import ppTableModel
-
 
 def table_model_init(table_model_type, model_path, max_time, _device_='cpu'):
     if table_model_type == STRUCT_EQTABLE:
-        table_model = StructTableModel(model_path, max_time=max_time, device=_device_)
+        table_model = StructTableModel(
+            model_path, max_time=max_time, device=_device_)
     else:
         config = {
             "model_dir": model_path,
@@ -64,7 +64,8 @@ def mfr_model_init(weight_dir, cfg_path, _device_='cpu'):
     task = tasks.setup_task(cfg)
     model = task.build_model(cfg)
     model = model.to(_device_)
-    vis_processor = load_processor('formula_image_eval', cfg.config.datasets.formula_rec_eval.vis_processor.eval)
+    vis_processor = load_processor(
+        'formula_image_eval', cfg.config.datasets.formula_rec_eval.vis_processor.eval)
     mfr_transform = transforms.Compose([vis_processor, ])
     return [model, mfr_transform]
 
@@ -75,7 +76,8 @@ def layout_model_init(weight, config_file, device):
 
 
 def ocr_model_init(show_log: bool = False, det_db_box_thresh=0.3):
-    model = ModifiedPaddleOCR(show_log=show_log, det_db_box_thresh=det_db_box_thresh)
+    model = ModifiedPaddleOCR(
+        show_log=show_log, det_db_box_thresh=det_db_box_thresh)
     return model
 
 
@@ -109,7 +111,8 @@ class AtomModelSingleton:
 
     def get_atom_model(self, atom_model_name: str, **kwargs):
         if atom_model_name not in self._models:
-            self._models[atom_model_name] = atom_model_init(model_name=atom_model_name, **kwargs)
+            self._models[atom_model_name] = atom_model_init(
+                model_name=atom_model_name, **kwargs)
         return self._models[atom_model_name]
 
 
@@ -169,12 +172,17 @@ class CustomPEKModel:
         with open(config_path, "r", encoding='utf-8') as f:
             self.configs = yaml.load(f, Loader=yaml.FullLoader)
         # 初始化解析配置
-        self.apply_layout = kwargs.get("apply_layout", self.configs["config"]["layout"])
-        self.apply_formula = kwargs.get("apply_formula", self.configs["config"]["formula"])
+        self.apply_layout = kwargs.get(
+            "apply_layout", self.configs["config"]["layout"])
+        self.apply_formula = kwargs.get(
+            "apply_formula", self.configs["config"]["formula"])
         # table config
-        self.table_config = kwargs.get("table_config", self.configs["config"]["table_config"])
-        self.apply_table = self.table_config.get("is_table_recog_enable", False)
-        self.table_max_time = self.table_config.get("max_time", TABLE_MAX_TIME_VALUE)
+        self.table_config = kwargs.get(
+            "table_config", self.configs["config"]["table_config"])
+        self.apply_table = self.table_config.get(
+            "is_table_recog_enable", False)
+        self.table_max_time = self.table_config.get(
+            "max_time", TABLE_MAX_TIME_VALUE)
         self.table_model_type = self.table_config.get("model", TABLE_MASTER)
         self.apply_ocr = ocr
         logger.info(
@@ -186,7 +194,8 @@ class CustomPEKModel:
         # 初始化解析方案
         self.device = kwargs.get("device", self.configs["config"]["device"])
         logger.info("using device: {}".format(self.device))
-        models_dir = kwargs.get("models_dir", os.path.join(root_dir, "resources", "models"))
+        models_dir = kwargs.get("models_dir", os.path.join(
+            root_dir, "resources", "models"))
         logger.info("using models_dir: {}".format(models_dir))
 
         atom_model_manager = AtomModelSingleton()
@@ -197,11 +206,14 @@ class CustomPEKModel:
             # self.mfd_model = mfd_model_init(str(os.path.join(models_dir, self.configs["weights"]["mfd"])))
             self.mfd_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.MFD,
-                mfd_weights=str(os.path.join(models_dir, self.configs["weights"]["mfd"]))
+                mfd_weights=str(os.path.join(
+                    models_dir, self.configs["weights"]["mfd"]))
             )
             # 初始化公式解析模型
-            mfr_weight_dir = str(os.path.join(models_dir, self.configs["weights"]["mfr"]))
-            mfr_cfg_path = str(os.path.join(model_config_dir, "UniMERNet", "demo.yaml"))
+            mfr_weight_dir = str(os.path.join(
+                models_dir, self.configs["weights"]["mfr"]))
+            mfr_cfg_path = str(os.path.join(
+                model_config_dir, "UniMERNet", "demo.yaml"))
             # self.mfr_model, mfr_vis_processors = mfr_model_init(mfr_weight_dir, mfr_cfg_path, _device_=self.device)
             # self.mfr_transform = transforms.Compose([mfr_vis_processors, ])
             self.mfr_model, self.mfr_transform = atom_model_manager.get_atom_model(
@@ -219,8 +231,10 @@ class CustomPEKModel:
         # )
         self.layout_model = atom_model_manager.get_atom_model(
             atom_model_name=AtomicModel.Layout,
-            layout_weights=str(os.path.join(models_dir, self.configs['weights']['layout'])),
-            layout_config_file=str(os.path.join(model_config_dir, "layoutlmv3", "layoutlmv3_base_inference.yaml")),
+            layout_weights=str(os.path.join(
+                models_dir, self.configs['weights']['layout'])),
+            layout_config_file=str(os.path.join(
+                model_config_dir, "layoutlmv3", "layoutlmv3_base_inference.yaml")),
             device=self.device
         )
         # 初始化ocr
@@ -240,7 +254,8 @@ class CustomPEKModel:
             self.table_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.Table,
                 table_model_type=self.table_model_type,
-                table_model_path=str(os.path.join(models_dir, table_model_dir)),
+                table_model_path=str(os.path.join(
+                    models_dir, table_model_dir)),
                 table_max_time=self.table_max_time,
                 device=self.device
             )
@@ -260,7 +275,8 @@ class CustomPEKModel:
 
         if self.apply_formula:
             # 公式检测
-            mfd_res = self.mfd_model.predict(image, imgsz=1888, conf=0.25, iou=0.45, verbose=True)[0]
+            mfd_res = self.mfd_model.predict(
+                image, imgsz=1888, conf=0.25, iou=0.45, verbose=True)[0]
             for xyxy, conf, cla in zip(mfd_res.boxes.xyxy.cpu(), mfd_res.boxes.conf.cpu(), mfd_res.boxes.cls.cpu()):
                 xmin, ymin, xmax, ymax = [int(p.item()) for p in xyxy]
                 new_item = {
@@ -271,7 +287,8 @@ class CustomPEKModel:
                 }
                 layout_res.append(new_item)
                 latex_filling_list.append(new_item)
-                bbox_img = get_croped_image(Image.fromarray(image), [xmin, ymin, xmax, ymax])
+                bbox_img = get_croped_image(Image.fromarray(image), [
+                                            xmin, ymin, xmax, ymax])
                 mf_image_list.append(bbox_img)
 
             # 公式识别
@@ -286,7 +303,8 @@ class CustomPEKModel:
             for res, latex in zip(latex_filling_list, mfr_res):
                 res['latex'] = latex_rm_whitespace(latex)
             mfr_cost = round(time.time() - mfr_start, 2)
-            logger.info(f"formula nums: {len(mf_image_list)}, mfr time: {mfr_cost}")
+            logger.info(
+                f"formula nums: {len(mf_image_list)}, mfr time: {mfr_cost}")
 
         # Select regions for OCR / formula regions / table regions
         ocr_res_list = []
@@ -305,18 +323,22 @@ class CustomPEKModel:
 
         #  Unified crop img logic
         def crop_img(input_res, input_pil_img, crop_paste_x=0, crop_paste_y=0):
-            crop_xmin, crop_ymin = int(input_res['poly'][0]), int(input_res['poly'][1])
-            crop_xmax, crop_ymax = int(input_res['poly'][4]), int(input_res['poly'][5])
+            crop_xmin, crop_ymin = int(
+                input_res['poly'][0]), int(input_res['poly'][1])
+            crop_xmax, crop_ymax = int(
+                input_res['poly'][4]), int(input_res['poly'][5])
             # Create a white background with an additional width and height of 50
             crop_new_width = crop_xmax - crop_xmin + crop_paste_x * 2
             crop_new_height = crop_ymax - crop_ymin + crop_paste_y * 2
-            return_image = Image.new('RGB', (crop_new_width, crop_new_height), 'white')
+            return_image = Image.new(
+                'RGB', (crop_new_width, crop_new_height), 'white')
 
             # Crop image
             crop_box = (crop_xmin, crop_ymin, crop_xmax, crop_ymax)
             cropped_img = input_pil_img.crop(crop_box)
             return_image.paste(cropped_img, (crop_paste_x, crop_paste_y))
-            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin, crop_xmax, crop_ymax, crop_new_width, crop_new_height]
+            return_list = [crop_paste_x, crop_paste_y, crop_xmin, crop_ymin,
+                           crop_xmax, crop_ymax, crop_new_width, crop_new_height]
             return return_image, return_list
 
         pil_img = Image.fromarray(image)
@@ -326,7 +348,8 @@ class CustomPEKModel:
             ocr_start = time.time()
             # Process each area that requires OCR processing
             for res in ocr_res_list:
-                new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
+                new_image, useful_list = crop_img(
+                    res, pil_img, crop_paste_x=50, crop_paste_y=50)
                 paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
                 # Adjust the coordinates of the formula area
                 adjusted_mfdetrec_res = []
@@ -346,8 +369,10 @@ class CustomPEKModel:
                         })
 
                 # OCR recognition
-                new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
-                ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
+                new_image = cv2.cvtColor(
+                    np.asarray(new_image), cv2.COLOR_RGB2BGR)
+                ocr_res = self.ocr_model.ocr(
+                    new_image, mfd_res=adjusted_mfdetrec_res)[0]
 
                 # Integration results
                 if ocr_res:
@@ -377,7 +402,8 @@ class CustomPEKModel:
             for res in table_res_list:
                 new_image, _ = crop_img(res, pil_img)
                 single_table_start_time = time.time()
-                logger.info("---------table recognition processing begins-------")
+                logger.info(
+                    "---------table recognition processing begins-------")
                 latex_code = None
                 html_code = None
                 if self.table_model_type == STRUCT_EQTABLE:
@@ -387,10 +413,12 @@ class CustomPEKModel:
                     html_code = self.table_model.img2html(new_image)
 
                 run_time = time.time() - single_table_start_time
-                logger.info(f"------table recognition processing ends within {run_time}s-----")
+                logger.info(
+                    f"------table recognition processing ends within {run_time}s-----")
                 if run_time > self.table_max_time:
-                    logger.warning(f"-------table recognition processing exceeds max time {self.table_max_time}s-------")
-                
+                    logger.warning(
+                        f"-------table recognition processing exceeds max time {self.table_max_time}s-------")
+
                 # 判断是否返回正常
                 if latex_code:
                     expected_ending = latex_code.strip().endswith('end{tabular}') or latex_code.strip().endswith(
@@ -398,11 +426,13 @@ class CustomPEKModel:
                     if expected_ending:
                         res["latex"] = latex_code
                     else:
-                        logger.warning(f"--------table recognition processing fails--------")
+                        logger.warning(
+                            f"--------table recognition processing fails--------")
                 elif html_code:
                     res["html"] = html_code
                 else:
-                    logger.warning(f"-------table recognition processing fails-------")
+                    logger.warning(
+                        f"-------table recognition processing fails-------")
             table_cost = round(time.time() - table_start, 2)
             logger.info(f"table cost: {table_cost}")
 
