@@ -141,27 +141,47 @@ model_init = init_model()
 logger.info(f"model_init: {model_init}")
 
 
+# 如果当前模块是主模块，则执行以下代码
 if __name__ == "__main__":
+    # 创建一个gr.Blocks对象，命名为demo
     with gr.Blocks() as demo:
+        # 创建一个gr.Row对象，命名为bu_flow
         with gr.Row():
+            # 创建一个gr.Column对象，命名为pdf_show，设置其样式为panel，缩放比例为5
             with gr.Column(variant='panel', scale=5):
+                # 创建一个gr.Markdown对象，命名为pdf_show
                 pdf_show = gr.Markdown()
-                max_pages = gr.Slider(1, 10, 5, step=1, label="Max convert pages")
+                # 创建一个gr.Slider对象，命名为max_pages，设置其最小值为1，最大值为10，默认值为5，步长为1，标签为Max convert pages
+                max_pages = gr.Slider(1, 500, 5, step=1, label="Max convert pages")
+                # 创建一个gr.Row对象，命名为bu_flow
                 with gr.Row() as bu_flow:
+                    # 创建一个gr.Button对象，命名为change_bu，标签为Convert
                     change_bu = gr.Button("Convert")
+                    # 创建一个gr.ClearButton对象，命名为clear_bu，设置其输入为pdf_show，默认值为Clear
                     clear_bu = gr.ClearButton([pdf_show], value="Clear")
+                # 创建一个PDF对象，命名为pdf_show，设置其标签为Please upload pdf，交互式为True，高度为800
                 pdf_show = PDF(label="Please upload pdf", interactive=True, height=800)
 
+            # 创建一个gr.Column对象，命名为output_file，设置其样式为panel，缩放比例为5
             with gr.Column(variant='panel', scale=5):
+                # 创建一个gr.File对象，命名为output_file，设置其标签为convert result，交互式为False
                 output_file = gr.File(label="convert result", interactive=False)
+                # 创建一个gr.Tabs对象
                 with gr.Tabs():
+                    # 创建一个gr.Tab对象，命名为Markdown rendering
                     with gr.Tab("Markdown rendering"):
+                        # 创建一个gr.Markdown对象，命名为md，设置其标签为Markdown rendering，高度为900，显示复制按钮，设置latex_delimiters和line_breaks参数
                         md = gr.Markdown(label="Markdown rendering", height=900, show_copy_button=True,
                                          latex_delimiters=latex_delimiters, line_breaks=True)
+                    # 创建一个gr.Tab对象，命名为Markdown text
                     with gr.Tab("Markdown text"):
+                        # 创建一个gr.TextArea对象，命名为md_text，设置其行数为45，显示复制按钮
                         md_text = gr.TextArea(lines=45, show_copy_button=True)
+        # 当change_bu被点击时，执行to_markdown函数，输入为pdf_show和max_pages，输出为md、md_text、output_file和pdf_show
         change_bu.click(fn=to_markdown, inputs=[pdf_show, max_pages], outputs=[md, md_text, output_file, pdf_show])
+        # 当clear_bu被点击时，执行clear_bu.add函数，输入为md、pdf_show、md_text和output_file
         clear_bu.add([md, pdf_show, md_text, output_file])
 
-    demo.launch()
+    # 启动demo，设置share参数为True
+    demo.launch(share=True)
 

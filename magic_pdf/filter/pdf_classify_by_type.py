@@ -66,13 +66,13 @@ def merge_images(image_list, page_width, page_height, max_offset=5, max_gap=2):
             if full_width:
                 # 竖着拼需要满足两个前提，左右边界各偏移不能超过 max_offset，第一张图的下边界和第二张图的上边界偏移不能超过 max_gap
                 close1 = (last_x0 - max_offset) <= x0 <= (last_x0 + max_offset) and (last_x1 - max_offset) <= x1 <= (
-                            last_x1 + max_offset) and (last_y1 - max_gap) <= y0 <= (last_y1 + max_gap)
+                    last_x1 + max_offset) and (last_y1 - max_gap) <= y0 <= (last_y1 + max_gap)
 
             # 如果高达标，检测是否可以横着拼
             if full_height:
                 # 横着拼需要满足两个前提，上下边界各偏移不能超过 max_offset，第一张图的右边界和第二张图的左边界偏移不能超过 max_gap
                 close2 = (last_y0 - max_offset) <= y0 <= (last_y0 + max_offset) and (last_y1 - max_offset) <= y1 <= (
-                            last_y1 + max_offset) and (last_x1 - max_gap) <= x0 <= (last_x1 + max_gap)
+                    last_y1 + max_offset) and (last_x1 - max_gap) <= x0 <= (last_x1 + max_gap)
 
             # Check if the image can be merged with the last image
             if (full_width and close1) or (full_height and close2):
@@ -109,14 +109,16 @@ def classify_by_area(total_page: int, page_width, page_height, img_sz_list, text
 
     # 通过objid去掉重复出现10次以上的图片，这些图片是隐藏的透明图层，其特点是id都一样
     # 先对每个id出现的次数做个统计
-    objid_cnt = Counter([objid for page_img_sz in img_sz_list for _, _, _, _, objid in page_img_sz])
+    objid_cnt = Counter(
+        [objid for page_img_sz in img_sz_list for _, _, _, _, objid in page_img_sz])
     # 再去掉出现次数大于10的
     if total_page >= scan_max_page:  # 新的meta_scan只扫描前 scan_max_page 页，页数大于 scan_max_page 当total_page为 scan_max_page
         total_page = scan_max_page
 
     repeat_threshold = 2  # 把bad_image的阈值设为2
     # repeat_threshold = min(2, total_page)  # 当total_page为1时，repeat_threshold为1，会产生误判导致所有img变成bad_img
-    bad_image_objid = set([objid for objid, cnt in objid_cnt.items() if cnt >= repeat_threshold])
+    bad_image_objid = set(
+        [objid for objid, cnt in objid_cnt.items() if cnt >= repeat_threshold])
     # bad_image_page_idx = [i for i, page_img_sz in enumerate(img_sz_list) if any([objid in bad_image_objid for _, _, _, _, objid in page_img_sz])]
     # text_len_at_bad_image_page_idx = [text_len for i, text_len in enumerate(text_len_list) if i in bad_image_page_idx and text_len > 0]
 
@@ -140,8 +142,10 @@ def classify_by_area(total_page: int, page_width, page_height, img_sz_list, text
     max_image_area_per_page = [mymax([(x1 - x0) * (y1 - y0) for x0, y0, x1, y1, _ in page_img_sz]) for page_img_sz in
                                img_sz_list]
     page_area = page_width * page_height
-    max_image_area_per_page = [area / page_area for area in max_image_area_per_page]
-    max_image_area_per_page = [area for area in max_image_area_per_page if area > 0.5]
+    max_image_area_per_page = [
+        area / page_area for area in max_image_area_per_page]
+    max_image_area_per_page = [
+        area for area in max_image_area_per_page if area > 0.5]
 
     if len(max_image_area_per_page) >= 0.5 * total_page:  # 阈值从0.8改到0.5，适配3页里面有两页和两页里面有一页的情况
         # 这里条件成立的前提是把反复出现的图片去掉了。这些图片是隐藏的透明图层，其特点是id都一样
@@ -171,7 +175,8 @@ def classify_by_text_len(text_len_list: list, total_page: int):
     # 排除前后10页对只有21，22页的pdf很尴尬，如果选出来的中间那一两页恰好没字容易误判，有了avg_words规则，这个规则可以忽略
     page_num = np.random.choice(total_page, select_page_cnt, replace=False)
     text_len_lst = [text_len_list[i] for i in page_num]
-    is_text_pdf = any([text_len > TEXT_LEN_THRESHOLD for text_len in text_len_lst])
+    is_text_pdf = any(
+        [text_len > TEXT_LEN_THRESHOLD for text_len in text_len_lst])
     return is_text_pdf
 
 
@@ -211,7 +216,7 @@ def classify_by_img_num(img_sz_list: list, img_num_list: list):
     # img_sz_list中非空元素的个数小于1，前80%的元素都相等，且最大值大于等于junk_limit_min
     if count_img_sz_list_not_none <= 1 and len(set(top_eighty_percent)) == 1 and max(img_num_list) >= junk_limit_min:
 
-        #拿max和min的值,用来判断list内的值是否全都相等
+        # 拿max和min的值,用来判断list内的值是否全都相等
         # min_imgs = min(img_num_list)
         # max_imgs = max(img_num_list)
         #
@@ -233,9 +238,11 @@ def classify_by_text_layout(text_layout_per_page: list):
         bool: 若文本布局以竖排为主，则返回False；否则返回True。
     """
     # 统计text_layout_per_page中竖排的个数
-    count_vertical = sum(1 for item in text_layout_per_page if item == 'vertical')
+    count_vertical = sum(
+        1 for item in text_layout_per_page if item == 'vertical')
     # 统计text_layout_per_page中横排的个数
-    count_horizontal = sum(1 for item in text_layout_per_page if item == 'horizontal')
+    count_horizontal = sum(
+        1 for item in text_layout_per_page if item == 'horizontal')
     # 计算text_layout_per_page中竖排的占比
     known_layout_cnt = count_vertical + count_horizontal
     if known_layout_cnt != 0:
@@ -363,7 +370,8 @@ def main(json_file):
                 is_needs_password = o['is_needs_password']
                 if is_encrypted or total_page == 0 or is_needs_password:  # 加密的，需要密码的，没有页面的，都不处理
                     continue
-                tag = classify(total_page, page_width, page_height, img_sz_list, text_len_list, text_layout_list)
+                tag = classify(total_page, page_width, page_height,
+                               img_sz_list, text_len_list, text_layout_list)
                 o['is_text_pdf'] = tag
                 print(json.dumps(o, ensure_ascii=False))
     except Exception as e:

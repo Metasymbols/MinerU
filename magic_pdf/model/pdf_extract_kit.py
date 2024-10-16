@@ -377,7 +377,7 @@ class CustomPEKModel:
             for res in table_res_list:
                 new_image, _ = crop_img(res, pil_img)
                 single_table_start_time = time.time()
-                logger.info("------------------table recognition processing begins-----------------")
+                logger.info("---------table recognition processing begins-------")
                 latex_code = None
                 html_code = None
                 if self.table_model_type == STRUCT_EQTABLE:
@@ -387,22 +387,22 @@ class CustomPEKModel:
                     html_code = self.table_model.img2html(new_image)
 
                 run_time = time.time() - single_table_start_time
-                logger.info(f"------------table recognition processing ends within {run_time}s-----")
+                logger.info(f"------table recognition processing ends within {run_time}s-----")
                 if run_time > self.table_max_time:
-                    logger.warning(f"------------table recognition processing exceeds max time {self.table_max_time}s----------")
+                    logger.warning(f"-------table recognition processing exceeds max time {self.table_max_time}s-------")
+                
                 # 判断是否返回正常
-
                 if latex_code:
                     expected_ending = latex_code.strip().endswith('end{tabular}') or latex_code.strip().endswith(
                         'end{table}')
                     if expected_ending:
                         res["latex"] = latex_code
                     else:
-                        logger.warning(f"------------table recognition processing fails----------")
+                        logger.warning(f"--------table recognition processing fails--------")
                 elif html_code:
                     res["html"] = html_code
                 else:
-                    logger.warning(f"------------table recognition processing fails----------")
+                    logger.warning(f"-------table recognition processing fails-------")
             table_cost = round(time.time() - table_start, 2)
             logger.info(f"table cost: {table_cost}")
 

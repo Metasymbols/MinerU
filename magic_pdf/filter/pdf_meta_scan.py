@@ -22,8 +22,10 @@ def calculate_max_image_area_per_page(result: list, page_width_pts, page_height_
     max_image_area_per_page = [mymax([(x1 - x0) * (y1 - y0) for x0, y0, x1, y1, _ in page_img_sz]) for page_img_sz in
                                result]
     page_area = int(page_width_pts) * int(page_height_pts)
-    max_image_area_per_page = [area / page_area for area in max_image_area_per_page]
-    max_image_area_per_page = [area for area in max_image_area_per_page if area > 0.6]
+    max_image_area_per_page = [
+        area / page_area for area in max_image_area_per_page]
+    max_image_area_per_page = [
+        area for area in max_image_area_per_page if area > 0.6]
     return max_image_area_per_page
 
 
@@ -58,18 +60,20 @@ def get_image_info(doc: fitz.Document, page_width_pts, page_height_pts) -> list:
     :return:
     """
     # 使用 Counter 计数 img_bojid 的出现次数
-    img_bojid_counter = Counter(img[0] for page in doc for img in page.get_images())
+    img_bojid_counter = Counter(img[0]
+                                for page in doc for img in page.get_images())
     # 找出出现次数超过 len(doc) 半数的 img_bojid
 
     junk_limit = max(len(doc) * 0.5, junk_limit_min)  # 对一些页数比较少的进行豁免
 
-    junk_img_bojids = [img_bojid for img_bojid, count in img_bojid_counter.items() if count >= junk_limit]
+    junk_img_bojids = [img_bojid for img_bojid,
+                       count in img_bojid_counter.items() if count >= junk_limit]
 
-    #todo 加个判断，用前十页就行，这些垃圾图片需要满足两个条件，不止出现的次数要足够多，而且图片占书页面积的比例要足够大，且图与图大小都差不多
-    #有两种扫描版，一种文字版，这里可能会有误判
-    #扫描版1：每页都有所有扫描页图片，特点是图占比大，每页展示1张
-    #扫描版2，每页存储的扫描页图片数量递增，特点是图占比大，每页展示1张，需要清空junklist跑前50页图片信息用于分类判断
-    #文字版1.每页存储所有图片，特点是图片占页面比例不大，每页展示可能为0也可能不止1张 这种pdf需要拿前10页抽样检测img大小和个数，如果符合需要清空junklist
+    # todo 加个判断，用前十页就行，这些垃圾图片需要满足两个条件，不止出现的次数要足够多，而且图片占书页面积的比例要足够大，且图与图大小都差不多
+    # 有两种扫描版，一种文字版，这里可能会有误判
+    # 扫描版1：每页都有所有扫描页图片，特点是图占比大，每页展示1张
+    # 扫描版2，每页存储的扫描页图片数量递增，特点是图占比大，每页展示1张，需要清空junklist跑前50页图片信息用于分类判断
+    # 文字版1.每页存储所有图片，特点是图片占页面比例不大，每页展示可能为0也可能不止1张 这种pdf需要拿前10页抽样检测img大小和个数，如果符合需要清空junklist
     imgs_len_list = [len(page.get_images()) for page in doc]
 
     special_limit_pages = 10
@@ -82,7 +86,8 @@ def get_image_info(doc: fitz.Document, page_width_pts, page_height_pts) -> list:
             break
         if i >= special_limit_pages:
             break
-        page_result = process_image(page)  # 这里不传junk_img_bojids，拿前十页所有图片信息用于后续分析
+        # 这里不传junk_img_bojids，拿前十页所有图片信息用于后续分析
+        page_result = process_image(page)
         result.append(page_result)
         for item in result:
             if not any(item):  # 如果任何一页没有图片，说明是个文字版，需要判断是否为特殊文字版
@@ -102,16 +107,18 @@ def get_image_info(doc: fitz.Document, page_width_pts, page_height_pts) -> list:
             # # 如果前10页跑完都有图，根据每页图片数量是否相等判断是否需要清除junklist
             # if max(imgs_len_list) == min(imgs_len_list) and max(imgs_len_list) >= junk_limit_min:
 
-            #前10页都有图，且每页数量一致，需要检测图片大小占页面的比例判断是否需要清除junklist
-            max_image_area_per_page = calculate_max_image_area_per_page(result, page_width_pts, page_height_pts)
-            if len(max_image_area_per_page) < 0.8 * special_limit_pages:  # 前10页不全是大图，说明可能是个文字版pdf，把垃圾图片list置空
+            # 前10页都有图，且每页数量一致，需要检测图片大小占页面的比例判断是否需要清除junklist
+            max_image_area_per_page = calculate_max_image_area_per_page(
+                result, page_width_pts, page_height_pts)
+            # 前10页不全是大图，说明可能是个文字版pdf，把垃圾图片list置空
+            if len(max_image_area_per_page) < 0.8 * special_limit_pages:
                 junk_img_bojids = []
             else:  # 前10页都有图，而且80%都是大图，且每页图片数量一致并都很多，说明是扫描版1，不需要清空junklist
                 pass
         else:  # 每页图片数量不一致，需要清掉junklist全量跑前50页图片
             junk_img_bojids = []
 
-    #正式进入取前50页图片的信息流程
+    # 正式进入取前50页图片的信息流程
     result = []
     for i, page in enumerate(doc):
         if i >= scan_max_page:
@@ -126,7 +133,7 @@ def get_image_info(doc: fitz.Document, page_width_pts, page_height_pts) -> list:
 def get_pdf_page_size_pts(doc: fitz.Document):
     page_cnt = len(doc)
     l: int = min(page_cnt, 50)
-    #把所有宽度和高度塞到两个list 分别取中位数（中间遇到了个在纵页里塞横页的pdf，导致宽高互换了）
+    # 把所有宽度和高度塞到两个list 分别取中位数（中间遇到了个在纵页里塞横页的pdf，导致宽高互换了）
     page_width_list = []
     page_height_list = []
     for i in range(l):
@@ -152,7 +159,7 @@ def get_pdf_textlen_per_page(doc: fitz.Document):
         # 拿所有text的blocks
         # text_block = page.get_text("words")
         # text_block_len = sum([len(t[4]) for t in text_block])
-        #拿所有text的str
+        # 拿所有text的str
         text_block = page.get_text("text")
         text_block_len = len(text_block)
         # logger.info(f"page {page.number} text_block_len: {text_block_len}")
@@ -197,7 +204,8 @@ def get_pdf_text_layout_per_page(doc: fitz.Document):
                             if 'size' in span:
                                 font_sizes.append(span['size'])
                         if len(font_sizes) > 0:
-                            average_font_size = sum(font_sizes) / len(font_sizes)
+                            average_font_size = sum(
+                                font_sizes) / len(font_sizes)
                         else:
                             average_font_size = 10  # 有的line拿不到font_size，先定一个阈值100
                         if area <= average_font_size ** 2:  # 判断bbox的面积是否小于平均字体大小的平方,单字无法计算是横向还是纵向
@@ -328,7 +336,8 @@ def pdf_meta_scan(pdf_bytes: bytes):
         imgs_per_page = get_imgs_per_page(doc)
         # logger.info(f"imgs_per_page: {imgs_per_page}")
 
-        image_info_per_page, junk_img_bojids = get_image_info(doc, page_width_pts, page_height_pts)
+        image_info_per_page, junk_img_bojids = get_image_info(
+            doc, page_width_pts, page_height_pts)
         # logger.info(f"image_info_per_page: {image_info_per_page}, junk_img_bojids: {junk_img_bojids}")
         text_len_per_page = get_pdf_textlen_per_page(doc)
         # logger.info(f"text_len_per_page: {text_len_per_page}")
