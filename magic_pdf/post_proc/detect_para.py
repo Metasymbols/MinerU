@@ -355,7 +355,8 @@ class DiscardByException:
         if page_num == 0:
             return None
 
-        if exception_page_nums / page_num > 0.1:  # Low ratio means basically, whenever this is the case, it is discarded
+        # Low ratio means basically, whenever this is the case, it is discarded
+        if exception_page_nums / page_num > 0.1:
             return exception.message
 
         return None
@@ -460,7 +461,8 @@ class LayoutFilterProcessor:
                     layout_bbox_objs = blocks["layout_bboxes"]
                     if layout_bbox_objs is None:
                         continue
-                    layout_bboxes = [bbox_obj["layout_bbox"] for bbox_obj in layout_bbox_objs]
+                    layout_bboxes = [bbox_obj["layout_bbox"]
+                                     for bbox_obj in layout_bbox_objs]
 
                     # Enlarge each value of x0, y0, x1, y1 for each layout_bbox to prevent loss of text.
                     layout_bboxes = [
@@ -579,7 +581,8 @@ class RawBlockProcessor:
                 }
             else:  # Handle the rest lines
                 if (
-                    abs(raw_line_bbox[1] - new_line["bbox"][1]) <= self.y_tolerance
+                    abs(raw_line_bbox[1] - new_line["bbox"]
+                        [1]) <= self.y_tolerance
                     and abs(raw_line_bbox[3] - new_line["bbox"][3]) <= self.y_tolerance
                 ):
                     new_line["bbox"] = (
@@ -627,7 +630,8 @@ class RawBlockProcessor:
 
         block_id = raw_block["number"]
         block_bbox = raw_block["bbox"]
-        block_text = "".join(span["text"] for line in raw_block["lines"] for span in line["spans"])
+        block_text = "".join(
+            span["text"] for line in raw_block["lines"] for span in line["spans"])
         raw_lines = raw_block["lines"]
         block_lines = self.__make_new_lines(raw_lines)
 
@@ -735,8 +739,10 @@ class BlockStatisticsCalculator:
 
         X0 = np.median(x0_values) if x0_values else 0
         X1 = np.median(x1_values) if x1_values else 0
-        avg_char_width = sum(char_widths) / len(char_widths) if char_widths else 0
-        avg_char_height = sum(char_heights) / len(char_heights) if char_heights else 0
+        avg_char_width = sum(char_widths) / \
+            len(char_widths) if char_widths else 0
+        avg_char_height = sum(char_heights) / \
+            len(char_heights) if char_heights else 0
 
         # max_freq_font_type = max(set(block_font_types), key=block_font_types.count) if block_font_types else None
 
@@ -752,12 +758,16 @@ class BlockStatisticsCalculator:
 
         max_freq_font_type = max_span_font_type
 
-        avg_font_size = sum(block_font_sizes) / len(block_font_sizes) if block_font_sizes else None
+        avg_font_size = sum(block_font_sizes) / \
+            len(block_font_sizes) if block_font_sizes else None
 
-        avg_dir_horizontal = sum([dir[0] for dir in block_directions]) / len(block_directions) if block_directions else 0
-        avg_dir_vertical = sum([dir[1] for dir in block_directions]) / len(block_directions) if block_directions else 0
+        avg_dir_horizontal = sum([dir[0] for dir in block_directions]) / \
+            len(block_directions) if block_directions else 0
+        avg_dir_vertical = sum([dir[1] for dir in block_directions]) / \
+            len(block_directions) if block_directions else 0
 
-        median_font_size = float(np.median(block_font_sizes)) if block_font_sizes else None
+        median_font_size = float(
+            np.median(block_font_sizes)) if block_font_sizes else None
 
         return (
             X0,
@@ -883,13 +893,17 @@ class DocStatisticsCalculator:
                         block_text_length = len(input_block.get("text", ""))
                         if block_text_length < avg_text_length * 0.5:
                             continue
-                        block_font_type = safe_get(input_block, "block_font_type", "")
-                        block_font_size = safe_get(input_block, "block_font_size", 0)
+                        block_font_type = safe_get(
+                            input_block, "block_font_type", "")
+                        block_font_size = safe_get(
+                            input_block, "block_font_size", 0)
                         font_list.append((block_font_type, block_font_size))
 
         font_counter = Counter(font_list)
-        most_common_font = font_counter.most_common(1)[0] if font_list else (("", 0), 0)
-        second_most_common_font = font_counter.most_common(2)[1] if len(font_counter) > 1 else (("", 0), 0)
+        most_common_font = font_counter.most_common(
+            1)[0] if font_list else (("", 0), 0)
+        second_most_common_font = font_counter.most_common(
+            2)[1] if len(font_counter) > 1 else (("", 0), 0)
 
         statistics = {
             "num_pages": 0,
@@ -1054,7 +1068,8 @@ class TitleProcessor:
             """
 
             def __is_italic_span(span):
-                return bool(span["flags"] & 2**1)  # Check if the font is italic
+                # Check if the font is italic
+                return bool(span["flags"] & 2**1)
 
             for span in line["spans"]:
                 if not __is_italic_span(span):
@@ -1219,8 +1234,10 @@ class TitleProcessor:
             bool
                 True if the current line has the same font type as the document average font type, False otherwise.
             """
-            doc_most_common_font_type = safe_get(self.doc_statistics, "most_common_font_type", "").lower()
-            doc_second_most_common_font_type = safe_get(self.doc_statistics, "second_most_common_font_type", "").lower()
+            doc_most_common_font_type = safe_get(
+                self.doc_statistics, "most_common_font_type", "").lower()
+            doc_second_most_common_font_type = safe_get(
+                self.doc_statistics, "second_most_common_font_type", "").lower()
 
             return curr_line_font_type.lower() in [doc_most_common_font_type, doc_second_most_common_font_type]
 
@@ -1240,9 +1257,12 @@ class TitleProcessor:
             bool
                 True if the current line has a large enough font size, False otherwise.
             """
-            doc_most_common_font_size = safe_get(self.doc_statistics, "most_common_font_size", 0)
-            doc_second_most_common_font_size = safe_get(self.doc_statistics, "second_most_common_font_size", 0)
-            doc_avg_font_size = min(doc_most_common_font_size, doc_second_most_common_font_size)
+            doc_most_common_font_size = safe_get(
+                self.doc_statistics, "most_common_font_size", 0)
+            doc_second_most_common_font_size = safe_get(
+                self.doc_statistics, "second_most_common_font_size", 0)
+            doc_avg_font_size = min(
+                doc_most_common_font_size, doc_second_most_common_font_size)
 
             return curr_line_font_size >= doc_avg_font_size * ratio
 
@@ -1281,14 +1301,16 @@ class TitleProcessor:
 
             sufficient_spacing_above = False
             if prev_line_bbox:
-                vertical_spacing_above = min(y0 - prev_line_bbox[1], y1 - prev_line_bbox[3])
+                vertical_spacing_above = min(
+                    y0 - prev_line_bbox[1], y1 - prev_line_bbox[3])
                 sufficient_spacing_above = vertical_spacing_above > vertical_thres
             else:
                 sufficient_spacing_above = True
 
             sufficient_spacing_below = False
             if next_line_bbox:
-                vertical_spacing_below = min(next_line_bbox[1] - y0, next_line_bbox[3] - y1)
+                vertical_spacing_below = min(
+                    next_line_bbox[1] - y0, next_line_bbox[3] - y1)
                 sufficient_spacing_below = vertical_spacing_below > vertical_thres
             else:
                 sufficient_spacing_below = True
@@ -1334,7 +1356,8 @@ class TitleProcessor:
                 True if the current line is a name list, False otherwise.
             """
 
-            result = self.nlp_model.detect_entity_catgr_using_nlp(curr_line_text)
+            result = self.nlp_model.detect_entity_catgr_using_nlp(
+                curr_line_text)
 
             return result
 
@@ -1353,7 +1376,8 @@ class TitleProcessor:
                 True if the current line is a numbered list, False otherwise.
             """
 
-            compiled_pattern = re.compile(self.numbered_title_pattern, re.VERBOSE)
+            compiled_pattern = re.compile(
+                self.numbered_title_pattern, re.VERBOSE)
 
             if compiled_pattern.search(curr_line_text):
                 return True
@@ -1400,7 +1424,8 @@ class TitleProcessor:
                 True if the current line contains only symbols that have no meaning, False otherwise.
             """
 
-            punctuation_marks = re.findall(r"[^\w\s]", line_text)  # find all punctuation marks
+            # find all punctuation marks
+            punctuation_marks = re.findall(r"[^\w\s]", line_text)
             number_of_punctuation_marks = len(punctuation_marks)
 
             text_length = len(line_text)
@@ -1473,8 +1498,10 @@ class TitleProcessor:
             """
             spans = curr_line["spans"]
             max_accumulated_length = 0
-            max_span_font_size = curr_line["spans"][0]["size"]  # default value, float type
-            max_span_font_type = curr_line["spans"][0]["font"].lower()  # default value, string type
+            # default value, float type
+            max_span_font_size = curr_line["spans"][0]["size"]
+            # default value, string type
+            max_span_font_type = curr_line["spans"][0]["font"].lower()
             for span in spans:
                 if span["text"].isspace():
                     continue
@@ -1516,7 +1543,8 @@ class TitleProcessor:
 
             # prefix text of curr_line satisfies the following title format: x.x
             prefix_text_pattern = r"^\d+\.\d+"
-            has_subtitle_format = re.match(prefix_text_pattern, curr_line["text"])
+            has_subtitle_format = re.match(
+                prefix_text_pattern, curr_line["text"])
 
             if has_same_prefix_digit or has_subtitle_format:
                 return True
@@ -1530,20 +1558,23 @@ class TitleProcessor:
         """
         curr_line_bbox = curr_line["bbox"]
         curr_line_text = curr_line["text"]
-        curr_line_font_type, curr_line_font_size = __compute_line_font_type_and_size(curr_line)
+        curr_line_font_type, curr_line_font_size = __compute_line_font_type_and_size(
+            curr_line)
 
         if len(curr_line_text.strip()) == 0:  # skip empty lines
             return False, False
 
         prev_line_bbox = prev_line["bbox"] if prev_line else None
         if prev_line:
-            prev_line_font_type, prev_line_font_size = __compute_line_font_type_and_size(prev_line)
+            prev_line_font_type, prev_line_font_size = __compute_line_font_type_and_size(
+                prev_line)
         else:
             prev_line_font_type, prev_line_font_size = None, None
 
         next_line_bbox = next_line["bbox"] if next_line else None
         if next_line:
-            next_line_font_type, next_line_font_size = __compute_line_font_type_and_size(next_line)
+            next_line_font_type, next_line_font_size = __compute_line_font_type_and_size(
+                next_line)
         else:
             next_line_font_type, next_line_font_size = None, None
 
@@ -1553,21 +1584,29 @@ class TitleProcessor:
         is_italc_font = __is_italic_font_line(curr_line)
         is_bold_font = __is_bold_font_line(curr_line)
 
-        is_font_size_little_less_than_doc_avg = __is_font_size_not_less_than_docAvg(curr_line_font_size, ratio=0.8)
-        is_font_size_not_less_than_doc_avg = __is_font_size_not_less_than_docAvg(curr_line_font_size, ratio=1)
-        is_much_larger_font_than_doc_avg = __is_font_size_not_less_than_docAvg(curr_line_font_size, ratio=1.6)
+        is_font_size_little_less_than_doc_avg = __is_font_size_not_less_than_docAvg(
+            curr_line_font_size, ratio=0.8)
+        is_font_size_not_less_than_doc_avg = __is_font_size_not_less_than_docAvg(
+            curr_line_font_size, ratio=1)
+        is_much_larger_font_than_doc_avg = __is_font_size_not_less_than_docAvg(
+            curr_line_font_size, ratio=1.6)
 
-        is_not_same_font_type_of_docAvg = not __is_same_font_type_of_docAvg(curr_line_font_type)
+        is_not_same_font_type_of_docAvg = not __is_same_font_type_of_docAvg(
+            curr_line_font_type)
 
         is_potential_title_font = is_bold_font or is_font_size_not_less_than_doc_avg or is_not_same_font_type_of_docAvg
 
-        is_mix_font_styles_strict = __has_mixed_font_styles(curr_line["spans"], strict_mode=True)
-        is_mix_font_styles_loose = __has_mixed_font_styles(curr_line["spans"], strict_mode=False)
+        is_mix_font_styles_strict = __has_mixed_font_styles(
+            curr_line["spans"], strict_mode=True)
+        is_mix_font_styles_loose = __has_mixed_font_styles(
+            curr_line["spans"], strict_mode=False)
 
         is_punctuation_heavy = __is_punctuation_heavy(curr_line_text)
 
-        is_word_list_line_by_rules = __is_word_list_line_by_rules(curr_line_text)
-        is_person_or_org_list_line_by_nlp = __get_text_catgr_by_nlp(curr_line_text) in ["PERSON", "GPE", "ORG"]
+        is_word_list_line_by_rules = __is_word_list_line_by_rules(
+            curr_line_text)
+        is_person_or_org_list_line_by_nlp = __get_text_catgr_by_nlp(curr_line_text) in [
+            "PERSON", "GPE", "ORG"]
 
         is_font_size_larger_than_neighbors = __is_larger_font_size_from_neighbors(
             curr_line_font_size, prev_line_font_size, next_line_font_size
@@ -1613,12 +1652,15 @@ class TitleProcessor:
         )
 
         is_numbered_title = __is_numbered_title(curr_line_text) and (
-            (has_sufficient_spaces_above or prev_line is None) and (has_sufficient_spaces_below or next_line is None)
+            (has_sufficient_spaces_above or prev_line is None) and (
+                has_sufficient_spaces_below or next_line is None)
         )
 
-        is_not_end_with_ending_puncs = not __is_end_with_ending_puncs(curr_line_text)
+        is_not_end_with_ending_puncs = not __is_end_with_ending_puncs(
+            curr_line_text)
 
-        is_not_only_no_meaning_symbols = not __contains_only_no_meaning_symbols(curr_line_text)
+        is_not_only_no_meaning_symbols = not __contains_only_no_meaning_symbols(
+            curr_line_text)
 
         is_equation = __is_equation(curr_line_text)
 
@@ -1879,22 +1921,27 @@ class TitleProcessor:
                             all_single_line_blocks.append(block)
 
                     new_para_blocks = []
-                    if not len(all_single_line_blocks) == len(para_blocks):  # Not all blocks are single line blocks.
+                    # Not all blocks are single line blocks.
+                    if not len(all_single_line_blocks) == len(para_blocks):
                         for para_block in para_blocks:
                             new_block = self._detect_title(para_block)
                             new_para_blocks.append(new_block)
-                            num_titles += sum([line.get("is_title", 0) for line in new_block["lines"]])
+                            num_titles += sum([line.get("is_title", 0)
+                                              for line in new_block["lines"]])
                     else:  # All blocks are single line blocks.
                         for para_block in para_blocks:
                             new_para_blocks.append(para_block)
-                            num_titles += sum([line.get("is_title", 0) for line in para_block["lines"]])
+                            num_titles += sum([line.get("is_title", 0)
+                                              for line in para_block["lines"]])
                     para_blocks = new_para_blocks
 
                 blocks["para_blocks"] = para_blocks
 
                 for para_block in para_blocks:
-                    all_titles = all(safe_get(line, "is_title", False) for line in para_block["lines"])
-                    para_text_len = sum([len(line["text"]) for line in para_block["lines"]])
+                    all_titles = all(safe_get(line, "is_title", False)
+                                     for line in para_block["lines"])
+                    para_text_len = sum([len(line["text"])
+                                        for line in para_block["lines"]])
                     if (
                         all_titles and para_text_len < 200
                     ):  # total length of the paragraph is less than 200, more than this should not be a title
@@ -1927,7 +1974,8 @@ class TitleProcessor:
         title_blocks : list
         """
 
-        font_sizes = np.array([safe_get(tb["block"], "block_font_size", 0) for tb in title_blocks])
+        font_sizes = np.array(
+            [safe_get(tb["block"], "block_font_size", 0) for tb in title_blocks])
 
         # Use the mean and std of font sizes to remove extreme values
         mean_font_size = np.mean(font_sizes)
@@ -1936,7 +1984,8 @@ class TitleProcessor:
         max_extreme_font_size = mean_font_size + std_font_size  # type: ignore
 
         # Compute the threshold for title level
-        middle_font_sizes = font_sizes[(font_sizes > min_extreme_font_size) & (font_sizes < max_extreme_font_size)]
+        middle_font_sizes = font_sizes[(font_sizes > min_extreme_font_size) & (
+            font_sizes < max_extreme_font_size)]
         if middle_font_sizes.size > 0:
             middle_mean_font_size = np.mean(middle_font_sizes)
             level_threshold = middle_mean_font_size
@@ -2102,7 +2151,8 @@ class BlockTerminationProcessor:
         x0_near_X0 = abs(x0 - X0) < horizontal_thres
         x1_near_X1 = abs(x1 - X1) < horizontal_thres
 
-        prev_line_is_end_of_para = prev_line_bbox and (abs(prev_line_bbox[2] - X1) > avg_char_width)
+        prev_line_is_end_of_para = prev_line_bbox and (
+            abs(prev_line_bbox[2] - X1) > avg_char_width)
 
         sufficient_spacing_above = False
         if prev_line_bbox:
@@ -2186,7 +2236,8 @@ class BlockTerminationProcessor:
             start_confidence += 0.2
             decision_path.append("no_prev_line")
         else:
-            prev_line_is_end_of_para, _, _ = self._is_possible_end_of_para(prev_line, next_line, X0, X1, avg_char_width)
+            prev_line_is_end_of_para, _, _ = self._is_possible_end_of_para(
+                prev_line, next_line, X0, X1, avg_char_width)
             if prev_line_is_end_of_para:
                 start_confidence += 0.1
                 decision_path.append("prev_line_is_end_of_para")
@@ -2255,7 +2306,8 @@ class BlockTerminationProcessor:
         right_horizontal_ratio = 0.5
 
         x0, _, x1, y1 = curr_line_bbox
-        next_x0, next_y0, _, _ = next_line_bbox if next_line_bbox else (0, 0, 0, 0)
+        next_x0, next_y0, _, _ = next_line_bbox if next_line_bbox else (
+            0, 0, 0, 0)
 
         x0_near_X0 = abs(x0 - X0) < left_horizontal_ratio * avg_char_width
         if x0_near_X0:
@@ -2320,11 +2372,15 @@ class BlockTerminationProcessor:
             Construct a paragraph from given lines.
             """
 
-            font_sizes = [span["size"] for line in lines for span in line["spans"]]
-            avg_font_size = sum(font_sizes) / len(font_sizes) if font_sizes else 0
+            font_sizes = [span["size"]
+                          for line in lines for span in line["spans"]]
+            avg_font_size = sum(font_sizes) / \
+                len(font_sizes) if font_sizes else 0
 
-            font_colors = [span["color"] for line in lines for span in line["spans"]]
-            most_common_font_color = max(set(font_colors), key=font_colors.count) if font_colors else None
+            font_colors = [span["color"]
+                           for line in lines for span in line["spans"]]
+            most_common_font_color = max(
+                set(font_colors), key=font_colors.count) if font_colors else None
 
             font_type_lengths = {}
             for line in lines:
@@ -2337,7 +2393,8 @@ class BlockTerminationProcessor:
                         font_type_lengths[font_type] = bbox_width
 
             # get the font type with the longest bbox width
-            most_common_font_type = max(font_type_lengths, key=font_type_lengths.get) if font_type_lengths else None  # type: ignore
+            most_common_font_type = max(
+                font_type_lengths, key=font_type_lengths.get) if font_type_lengths else None  # type: ignore
 
             para_bbox = calculate_para_bbox(lines)
             para_text = " ".join(line["text"] for line in lines)
@@ -2378,7 +2435,8 @@ class BlockTerminationProcessor:
         for line_index, line in enumerate(block_lines):
             curr_line = line
             prev_line = block_lines[line_index - 1] if line_index > 0 else None
-            next_line = block_lines[line_index + 1] if line_index < len(block_lines) - 1 else None
+            next_line = block_lines[line_index +
+                                    1] if line_index < len(block_lines) - 1 else None
 
             """
             Start processing paragraphs.
@@ -2417,8 +2475,9 @@ class BlockTerminationProcessor:
 
         # Process the matched paragraphs
         for para_index, (start_idx, end_idx) in enumerate(para_ranges):
-            matched_lines = block_lines[start_idx : end_idx + 1]
-            para_properties = _construct_para(matched_lines, is_block_title, para_title_level)
+            matched_lines = block_lines[start_idx: end_idx + 1]
+            para_properties = _construct_para(
+                matched_lines, is_block_title, para_title_level)
             para_key = f"para_{len(processed_paras)}"
             processed_paras[para_key] = para_properties
             para_bboxes.append(para_properties["para_bbox"])
@@ -2427,7 +2486,8 @@ class BlockTerminationProcessor:
         # Deal with the remaining lines
         if end_idx_of_para < len(block_lines):
             unmatched_lines = block_lines[end_idx_of_para:]
-            unmatched_properties = _construct_para(unmatched_lines, is_block_title, para_title_level)
+            unmatched_properties = _construct_para(
+                unmatched_lines, is_block_title, para_title_level)
             unmatched_key = f"para_{len(processed_paras)}"
             processed_paras[unmatched_key] = unmatched_properties
             para_bboxes.append(unmatched_properties["para_bbox"])
@@ -2510,10 +2570,12 @@ class BlockContinuationProcessor:
             return True
 
         # Find the length of the common prefix
-        common_prefix_length = len(os.path.commonprefix([font_type_1, font_type_2]))
+        common_prefix_length = len(
+            os.path.commonprefix([font_type_1, font_type_2]))
 
         # Calculate the minimum prefix length based on the ratio
-        min_prefix_length = int(min(len(font_type_1), len(font_type_2)) * prefix_length_ratio)
+        min_prefix_length = int(
+            min(len(font_type_1), len(font_type_2)) * prefix_length_ratio)
 
         return common_prefix_length >= min_prefix_length
 
@@ -2558,16 +2620,19 @@ class BlockContinuationProcessor:
             text_len_ratio = len(block_2_text) / len(block_1_text)
             if text_len_ratio < 0.2:
                 avg_char_width_condition = (
-                    abs(block_1_avg_char_width - block_2_avg_char_width) / min(block_1_avg_char_width, block_2_avg_char_width)
+                    abs(block_1_avg_char_width - block_2_avg_char_width) /
+                    min(block_1_avg_char_width, block_2_avg_char_width)
                     < 0.5
                 )
             else:
                 avg_char_width_condition = (
-                    abs(block_1_avg_char_width - block_2_avg_char_width) / min(block_1_avg_char_width, block_2_avg_char_width)
+                    abs(block_1_avg_char_width - block_2_avg_char_width) /
+                    min(block_1_avg_char_width, block_2_avg_char_width)
                     < 0.2
                 )
 
-        block_font_size_condition = abs(block_1_font_size - block_2_font_size) < 1
+        block_font_size_condition = abs(
+            block_1_font_size - block_2_font_size) < 1
 
         return (
             self.__is_similar_font_type(block_1_font_type, block_2_font_type)
@@ -2636,9 +2701,11 @@ class BlockContinuationProcessor:
         para_2_font_color = safe_get(para_2, "para_font_color", "")
 
         if isinstance(para_1_font_type, list):  # get the most common font type
-            para_1_font_type = max(set(para_1_font_type), key=para_1_font_type.count)
+            para_1_font_type = max(set(para_1_font_type),
+                                   key=para_1_font_type.count)
         if isinstance(para_2_font_type, list):
-            para_2_font_type = max(set(para_2_font_type), key=para_2_font_type.count)
+            para_2_font_type = max(set(para_2_font_type),
+                                   key=para_2_font_type.count)
         if isinstance(para_1_font_size, list):  # compute average font type
             para_1_font_size = sum(para_1_font_size) / len(para_1_font_size)
         if isinstance(para_2_font_size, list):  # compute average font type
@@ -2694,10 +2761,12 @@ class BlockContinuationProcessor:
         else:
             x0_2, y0_2, x1_2, y1_2 = para_2_bboxes
 
-        right_align_threshold = 0.5 * (para_1_font_sizes + para_2_font_sizes) * 0.8
+        right_align_threshold = 0.5 * \
+            (para_1_font_sizes + para_2_font_sizes) * 0.8
         are_two_paras_right_aligned = abs(x1_1 - x1_2) < right_align_threshold
 
-        left_indent_threshold = 0.5 * (para_1_font_sizes + para_2_font_sizes) * 0.8
+        left_indent_threshold = 0.5 * \
+            (para_1_font_sizes + para_2_font_sizes) * 0.8
         is_para1_left_indent_than_papa2 = x0_1 - x0_2 > left_indent_threshold
         is_para2_left_indent_than_papa1 = x0_2 - x0_1 > left_indent_threshold
 
@@ -2826,7 +2895,8 @@ class BlockContinuationProcessor:
             True if para1 and para2 are from the same paragraph, else False
         """
         is_para_font_consistent = self._is_para_font_consistent(para_1, para_2)
-        is_para_puncs_consistent = self._is_para_puncs_consistent(para_1, para_2)
+        is_para_puncs_consistent = self._is_para_puncs_consistent(
+            para_1, para_2)
 
         return is_para_font_consistent and is_para_puncs_consistent
 
@@ -2854,18 +2924,21 @@ class BlockContinuationProcessor:
         spans_of_last_line_of_block_1 = last_line_of_block_1["spans"]
         spans_of_first_line_of_block_2 = first_line_of_block_2["spans"]
 
-        font_type_of_last_line_of_block_1 = spans_of_last_line_of_block_1[0]["font"].lower()
+        font_type_of_last_line_of_block_1 = spans_of_last_line_of_block_1[0]["font"].lower(
+        )
         font_size_of_last_line_of_block_1 = spans_of_last_line_of_block_1[0]["size"]
         font_color_of_last_line_of_block_1 = spans_of_last_line_of_block_1[0]["color"]
         font_flags_of_last_line_of_block_1 = spans_of_last_line_of_block_1[0]["flags"]
 
-        font_type_of_first_line_of_block_2 = spans_of_first_line_of_block_2[0]["font"].lower()
+        font_type_of_first_line_of_block_2 = spans_of_first_line_of_block_2[0]["font"].lower(
+        )
         font_size_of_first_line_of_block_2 = spans_of_first_line_of_block_2[0]["size"]
         font_color_of_first_line_of_block_2 = spans_of_first_line_of_block_2[0]["color"]
         font_flags_of_first_line_of_block_2 = spans_of_first_line_of_block_2[0]["flags"]
 
         return (
-            self.__is_similar_font_type(font_type_of_last_line_of_block_1, font_type_of_first_line_of_block_2)
+            self.__is_similar_font_type(
+                font_type_of_last_line_of_block_1, font_type_of_first_line_of_block_2)
             and abs(font_size_of_last_line_of_block_1 - font_size_of_first_line_of_block_2) < 1
             # and font_color_of_last_line_of_block1 == font_color_of_first_line_of_block2
             and font_flags_of_last_line_of_block_1 == font_flags_of_first_line_of_block_2
@@ -2925,13 +2998,16 @@ class BlockContinuationProcessor:
                         curr_para["next_para_location"] = None  # 默认设置为None
                         curr_para["merge_next_para"] = False  # 默认设置为False
 
-                    next_block = para_blocks_of_curr_page[i + 1] if i < len(para_blocks_of_curr_page) - 1 else None
+                    next_block = para_blocks_of_curr_page[i + 1] if i < len(
+                        para_blocks_of_curr_page) - 1 else None
 
                     if next_block:
-                        curr_block_last_para_key = list(current_block["paras"].keys())[-1]
+                        curr_block_last_para_key = list(
+                            current_block["paras"].keys())[-1]
                         curr_blk_last_para = current_block["paras"][curr_block_last_para_key]
 
-                        next_block_first_para_key = list(next_block["paras"].keys())[0]
+                        next_block_first_para_key = list(
+                            next_block["paras"].keys())[0]
                         next_blk_first_para = next_block["paras"][next_block_first_para_key]
 
                         if self.should_merge_next_para(curr_blk_last_para, next_blk_first_para):
@@ -2943,7 +3019,8 @@ class BlockContinuationProcessor:
                             curr_blk_last_para["merge_next_para"] = True
                     else:
                         # Handle the case where the next block is in a different page
-                        curr_block_last_para_key = list(current_block["paras"].keys())[-1]
+                        curr_block_last_para_key = list(
+                            current_block["paras"].keys())[-1]
                         curr_blk_last_para = current_block["paras"][curr_block_last_para_key]
 
                         while not next_page_content.get("para_blocks", []) and next_page_idx <= the_last_page_id:
@@ -2952,14 +3029,17 @@ class BlockContinuationProcessor:
                             next_page_content = pdf_dict.get(next_page_id, {})
 
                         if next_page_content.get("para_blocks", []):
-                            next_blk_first_para_key = list(next_page_content["para_blocks"][0]["paras"].keys())[0]
-                            next_blk_first_para = next_page_content["para_blocks"][0]["paras"][next_blk_first_para_key]
+                            next_blk_first_para_key = list(
+                                next_page_content["para_blocks"][0]["paras"].keys())[0]
+                            next_blk_first_para = next_page_content[
+                                "para_blocks"][0]["paras"][next_blk_first_para_key]
 
                             if self.should_merge_next_para(curr_blk_last_para, next_blk_first_para):
                                 curr_blk_last_para["next_para_location"] = [
                                     next_page_idx,
                                     next_page_content["para_blocks"][0]["block_id"],
-                                    int(next_blk_first_para_key.split("_")[-1]),
+                                    int(next_blk_first_para_key.split(
+                                        "_")[-1]),
                                 ]
                                 curr_blk_last_para["merge_next_para"] = True
 
@@ -3015,11 +3095,13 @@ class BlockContinuationProcessor:
                             continue
 
                         while curr_para.get("merge_next_para"):
-                            curr_para_location = curr_para.get("curr_para_location")
-                            next_para_location = curr_para.get("next_para_location")
+                            curr_para_location = curr_para.get(
+                                "curr_para_location")
+                            next_para_location = curr_para.get(
+                                "next_para_location")
 
                             # print(f"curr_para_location: {curr_para_location}, next_para_location: {next_para_location}")
-                            
+
                             if not next_para_location:
                                 break
 
@@ -3034,12 +3116,14 @@ class BlockContinuationProcessor:
                             if not next_page_content:
                                 break
 
-                            next_block = self.find_block_by_id(next_page_content.get("para_blocks", []), next_block_id)
+                            next_block = self.find_block_by_id(
+                                next_page_content.get("para_blocks", []), next_block_id)
 
                             if not next_block:
                                 break
 
-                            next_para = next_block["paras"].get(f"para_{next_para_id}")
+                            next_para = next_block["paras"].get(
+                                f"para_{next_para_id}")
 
                             if not next_para or next_para.get("is_para_title"):
                                 break
@@ -3047,16 +3131,19 @@ class BlockContinuationProcessor:
                             # 合并段落文本
                             curr_para_text = curr_para.get("para_text", "")
                             next_para_text = next_para.get("para_text", "")
-                            curr_para["para_text"] = curr_para_text + " " + next_para_text
+                            curr_para["para_text"] = curr_para_text + \
+                                " " + next_para_text
 
                             # 更新 next_para_location
-                            curr_para["next_para_location"] = next_para.get("next_para_location")
+                            curr_para["next_para_location"] = next_para.get(
+                                "next_para_location")
 
                             # 将下一个段落文本置为空，表示已被合并
                             next_para["para_text"] = ""
 
                             # 更新 merge_next_para 标记
-                            curr_para["merge_next_para"] = next_para.get("merge_next_para", False)
+                            curr_para["merge_next_para"] = next_para.get(
+                                "merge_next_para", False)
 
         return pdf_dict
 
@@ -3113,11 +3200,13 @@ class DrawAnnos:
         """
         if self.__is_nested_list(nested_bbox):  # If it's a nested list
             for bbox in nested_bbox:
-                self.__draw_nested_boxes(page, bbox, color)  # Recursively call the function
+                # Recursively call the function
+                self.__draw_nested_boxes(page, bbox, color)
         elif self.__valid_rect(nested_bbox):  # If valid rectangle
             para_rect = fitz.Rect(nested_bbox)
             para_anno = page.add_rect_annot(para_rect)
-            para_anno.set_colors(stroke=color)  # draw with cyan color for combined paragraph
+            # draw with cyan color for combined paragraph
+            para_anno.set_colors(stroke=color)
             para_anno.set_border(width=1)
             para_anno.update()
 
@@ -3165,8 +3254,10 @@ class DrawAnnos:
                                 else:
                                     if self.__valid_rect(para_bbox):
                                         para_rect = fitz.Rect(para_bbox)
-                                        para_anno = page.add_rect_annot(para_rect)
-                                        para_anno.set_colors(stroke=(0, 1, 0))  # draw with green color for normal paragraph
+                                        para_anno = page.add_rect_annot(
+                                            para_rect)
+                                        # draw with green color for normal paragraph
+                                        para_anno.set_colors(stroke=(0, 1, 0))
                                         para_anno.set_border(width=0.5)
                                         para_anno.update()
 
@@ -3179,10 +3270,14 @@ class DrawAnnos:
                                         )  # draw with cyan color for combined title
                                     else:
                                         if self.__valid_rect(para_content["para_bbox"]):
-                                            para_rect = fitz.Rect(para_content["para_bbox"])
+                                            para_rect = fitz.Rect(
+                                                para_content["para_bbox"])
                                             if self.__valid_rect(para_content["para_bbox"]):
-                                                para_anno = page.add_rect_annot(para_rect)
-                                                para_anno.set_colors(stroke=(0, 0, 1))  # draw with blue color for normal title
+                                                para_anno = page.add_rect_annot(
+                                                    para_rect)
+                                                # draw with blue color for normal title
+                                                para_anno.set_colors(
+                                                    stroke=(0, 0, 1))
                                                 para_anno.set_border(width=0.5)
                                                 para_anno.update()
 
@@ -3246,7 +3341,8 @@ class ParaProcessPipeline:
             output_pdf_file_name = os.path.basename(output_pdf_path)
             # output_dir = os.path.dirname(output_pdf_path)
             output_dir = "\\tmp\\pdf_parse"
-            output_pdf_file_name = output_pdf_file_name.replace(".pdf", f"_stage_{stage}.json")
+            output_pdf_file_name = output_pdf_file_name.replace(
+                ".pdf", f"_stage_{stage}.json")
             pdf_dic_json_fpath = os.path.join(output_dir, output_pdf_file_name)
 
             if not os.path.exists(output_dir):
@@ -3258,10 +3354,12 @@ class ParaProcessPipeline:
 
             # Validate the output already exists
             if not os.path.exists(pdf_dic_json_fpath):
-                print_red(f"Failed to save the pdf_dic to {pdf_dic_json_fpath}")
+                print_red(
+                    f"Failed to save the pdf_dic to {pdf_dic_json_fpath}")
                 return None
             else:
-                print_green(f"Succeed to save the pdf_dic to {pdf_dic_json_fpath}")
+                print_green(
+                    f"Succeed to save the pdf_dic to {pdf_dic_json_fpath}")
 
             return pdf_dic_json_fpath
 
@@ -3289,7 +3387,8 @@ class ParaProcessPipeline:
 
         # Dump the first three stages of pdf_dic to a json file
         if para_debug_mode == "full":
-            pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="0", para_debug_mode=para_debug_mode)
+            pdf_dic_json_fpath = __save_pdf_dic(
+                pdf_dic, output_pdf_path, stage="0", para_debug_mode=para_debug_mode)
 
         """
         Detect titles in the document
@@ -3299,7 +3398,8 @@ class ParaProcessPipeline:
         pdf_dic = titleProcessor.batch_detect_titles(pdf_dic)
 
         if para_debug_mode == "full":
-            pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="1", para_debug_mode=para_debug_mode)
+            pdf_dic_json_fpath = __save_pdf_dic(
+                pdf_dic, output_pdf_path, stage="1", para_debug_mode=para_debug_mode)
 
         """
         Detect and divide the level of the titles
@@ -3309,7 +3409,8 @@ class ParaProcessPipeline:
         pdf_dic = titleProcessor.batch_recog_title_level(pdf_dic)
 
         if para_debug_mode == "full":
-            pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="2", para_debug_mode=para_debug_mode)
+            pdf_dic_json_fpath = __save_pdf_dic(
+                pdf_dic, output_pdf_path, stage="2", para_debug_mode=para_debug_mode)
 
         """
         Detect and split paragraphs inside each block
@@ -3319,7 +3420,8 @@ class ParaProcessPipeline:
         pdf_dic = blockInnerParasProcessor.batch_process_blocks(pdf_dic)
 
         if para_debug_mode == "full":
-            pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="3", para_debug_mode=para_debug_mode)
+            pdf_dic_json_fpath = __save_pdf_dic(
+                pdf_dic, output_pdf_path, stage="3", para_debug_mode=para_debug_mode)
 
         # pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="3", para_debug_mode="full")
         # print_green(f"pdf_dic_json_fpath: {pdf_dic_json_fpath}")
@@ -3333,7 +3435,8 @@ class ParaProcessPipeline:
         pdf_dic = blockContinuationProcessor.batch_merge_paras(pdf_dic)
 
         if para_debug_mode == "full":
-            pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="4", para_debug_mode=para_debug_mode)
+            pdf_dic_json_fpath = __save_pdf_dic(
+                pdf_dic, output_pdf_path, stage="4", para_debug_mode=para_debug_mode)
 
         # pdf_dic_json_fpath = __save_pdf_dic(pdf_dic, output_pdf_path, stage="4", para_debug_mode="full")
         # print_green(f"pdf_dic_json_fpath: {pdf_dic_json_fpath}")
@@ -3349,9 +3452,12 @@ class ParaProcessPipeline:
         is_discard_by_title_detection = discardByException.discard_by_title_detection(
             pdf_dic, exception=TitleDetectionException()
         )
-        is_discard_by_title_level = discardByException.discard_by_title_level(pdf_dic, exception=TitleLevelException())
-        is_discard_by_split_para = discardByException.discard_by_split_para(pdf_dic, exception=ParaSplitException())
-        is_discard_by_merge_para = discardByException.discard_by_merge_para(pdf_dic, exception=ParaMergeException())
+        is_discard_by_title_level = discardByException.discard_by_title_level(
+            pdf_dic, exception=TitleLevelException())
+        is_discard_by_split_para = discardByException.discard_by_split_para(
+            pdf_dic, exception=ParaSplitException())
+        is_discard_by_merge_para = discardByException.discard_by_merge_para(
+            pdf_dic, exception=ParaMergeException())
 
         if is_discard_by_single_line_block is not None:
             error_info = is_discard_by_single_line_block
@@ -3407,8 +3513,10 @@ if __name__ == "__main__":
         "app/pdf_toolbox/tests/assets/paper/paper.pdf" if os.name != "nt" else "app\\pdf_toolbox\\tests\\assets\\paper\\paper.pdf"
     )
     input_pdf_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PDF_PATH
-    output_pdf_path = sys.argv[2] if len(sys.argv) > 2 else input_pdf_path.split(".")[0] + "_recogPara.pdf"
-    output_json_path = sys.argv[3] if len(sys.argv) > 3 else input_pdf_path.split(".")[0] + "_recogPara.json"
+    output_pdf_path = sys.argv[2] if len(
+        sys.argv) > 2 else input_pdf_path.split(".")[0] + "_recogPara.pdf"
+    output_json_path = sys.argv[3] if len(
+        sys.argv) > 3 else input_pdf_path.split(".")[0] + "_recogPara.json"
 
     import stat
 
@@ -3469,4 +3577,5 @@ if __name__ == "__main__":
     with open(output_json_path, "w", encoding="utf-8") as f:
         json.dump(pdf_dic, f, ensure_ascii=False, indent=4)
 
-    pdf_dic = paraProcessPipeline.para_process_pipeline(output_json_path, input_pdf_doc, output_pdf_path)
+    pdf_dic = paraProcessPipeline.para_process_pipeline(
+        output_json_path, input_pdf_doc, output_pdf_path)

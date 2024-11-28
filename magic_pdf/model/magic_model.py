@@ -174,12 +174,7 @@ class MagicModel:
                     if pos_flag_count > 1:
                         continue
                     dis_figure_footnote[i] = min(
-<<<<<<< HEAD
-                        bbox_distance(figures[j]['bbox'],
-                                      footnotes[i]['bbox']),
-=======
                         self._bbox_distance(figures[j]['bbox'], footnotes[i]['bbox']),
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                         dis_figure_footnote.get(i, float('inf')),
                     )
             for i in range(len(footnotes)):
@@ -389,14 +384,9 @@ class MagicModel:
                     dis[j][i] = dis[i][j]
                     continue
 
-<<<<<<< HEAD
-                dis[i][j] = bbox_distance(
-                    all_bboxes[i]['bbox'], all_bboxes[j]['bbox'])
-=======
                 dis[i][j] = self._bbox_distance(
                     all_bboxes[subject_idx]['bbox'], all_bboxes[object_idx]['bbox']
                 )
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                 dis[j][i] = dis[i][j]
 
         used = set()

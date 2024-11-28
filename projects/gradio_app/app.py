@@ -2,27 +2,20 @@
 
 import base64
 import os
+import re
 import time
 import uuid
 import zipfile
 from pathlib import Path
-import re
 
+import gradio as gr
 import pymupdf
+from gradio_pdf import PDF
 from loguru import logger
-
 from magic_pdf.libs.hash_utils import compute_sha256
 from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
 from magic_pdf.rw.DiskReaderWriter import DiskReaderWriter
 from magic_pdf.tools.common import do_parse, prepare_env
-
-<<<<<<< HEAD:app.py
-# os.system("pip install gradio")
-# os.system("pip install gradio-pdf")
-=======
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d:projects/gradio_app/app.py
-import gradio as gr
-from gradio_pdf import PDF
 
 
 def read_fn(path):
@@ -40,7 +33,8 @@ def parse_pdf(doc_path, output_dir, end_page_id, is_ocr, layout_mode, formula_en
             parse_method = "ocr"
         else:
             parse_method = "auto"
-        local_image_dir, local_md_dir = prepare_env(output_dir, file_name, parse_method)
+        local_image_dir, local_md_dir = prepare_env(
+            output_dir, file_name, parse_method)
         do_parse(
             output_dir,
             file_name,
@@ -108,8 +102,10 @@ def to_markdown(file_path, end_pages, is_ocr, layout_mode, formula_enable, table
     # 获取识别的md文件以及压缩包文件路径
     local_md_dir, file_name = parse_pdf(file_path, './output', end_pages - 1, is_ocr,
                                         layout_mode, formula_enable, table_enable, language)
-    archive_zip_path = os.path.join("./output", compute_sha256(local_md_dir) + ".zip")
-    zip_archive_success = compress_directory_to_zip(local_md_dir, archive_zip_path)
+    archive_zip_path = os.path.join(
+        "./output", compute_sha256(local_md_dir) + ".zip")
+    zip_archive_success = compress_directory_to_zip(
+        local_md_dir, archive_zip_path)
     if zip_archive_success == 0:
         logger.info("压缩成功")
     else:
@@ -146,32 +142,30 @@ model_init = init_model()
 logger.info(f"model_init: {model_init}")
 
 
-<<<<<<< HEAD:app.py
-# 如果当前模块是主模块，则执行以下代码
-=======
-with open("header.html", "r") as file:
+with open(r"MinerU\projects\gradio_app\header.html", "r") as file:
     header = file.read()
 
 
 latin_lang = [
-        'af', 'az', 'bs', 'cs', 'cy', 'da', 'de', 'es', 'et', 'fr', 'ga', 'hr',
-        'hu', 'id', 'is', 'it', 'ku', 'la', 'lt', 'lv', 'mi', 'ms', 'mt', 'nl',
-        'no', 'oc', 'pi', 'pl', 'pt', 'ro', 'rs_latin', 'sk', 'sl', 'sq', 'sv',
-        'sw', 'tl', 'tr', 'uz', 'vi', 'french', 'german'
+    'af', 'az', 'bs', 'cs', 'cy', 'da', 'de', 'es', 'et', 'fr', 'ga', 'hr',
+    'hu', 'id', 'is', 'it', 'ku', 'la', 'lt', 'lv', 'mi', 'ms', 'mt', 'nl',
+    'no', 'oc', 'pi', 'pl', 'pt', 'ro', 'rs_latin', 'sk', 'sl', 'sq', 'sv',
+    'sw', 'tl', 'tr', 'uz', 'vi', 'french', 'german'
 ]
 arabic_lang = ['ar', 'fa', 'ug', 'ur']
 cyrillic_lang = [
-        'ru', 'rs_cyrillic', 'be', 'bg', 'uk', 'mn', 'abq', 'ady', 'kbd', 'ava',
-        'dar', 'inh', 'che', 'lbe', 'lez', 'tab'
+    'ru', 'rs_cyrillic', 'be', 'bg', 'uk', 'mn', 'abq', 'ady', 'kbd', 'ava',
+    'dar', 'inh', 'che', 'lbe', 'lez', 'tab'
 ]
 devanagari_lang = [
-        'hi', 'mr', 'ne', 'bh', 'mai', 'ang', 'bho', 'mah', 'sck', 'new', 'gom',
-        'sa', 'bgc'
+    'hi', 'mr', 'ne', 'bh', 'mai', 'ang', 'bho', 'mah', 'sck', 'new', 'gom',
+    'sa', 'bgc'
 ]
 other_lang = ['ch', 'en', 'korean', 'japan', 'chinese_cht', 'ta', 'te', 'ka']
 
 all_lang = [""]
-all_lang.extend([*other_lang, *latin_lang, *arabic_lang, *cyrillic_lang, *devanagari_lang])
+all_lang.extend([*other_lang, *latin_lang, *arabic_lang,
+                *cyrillic_lang, *devanagari_lang])
 
 
 def to_pdf(file_path):
@@ -185,7 +179,8 @@ def to_pdf(file_path):
             unique_filename = f"{uuid.uuid4()}.pdf"
 
             # 构建完整的文件路径
-            tmp_file_path = os.path.join(os.path.dirname(file_path), unique_filename)
+            tmp_file_path = os.path.join(
+                os.path.dirname(file_path), unique_filename)
 
             # 将字节数据写入文件
             with open(tmp_file_path, 'wb') as tmp_pdf_file:
@@ -194,58 +189,47 @@ def to_pdf(file_path):
             return tmp_file_path
 
 
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d:projects/gradio_app/app.py
 if __name__ == "__main__":
     # 创建一个gr.Blocks对象，命名为demo
     with gr.Blocks() as demo:
-<<<<<<< HEAD:app.py
-        # 创建一个gr.Row对象，命名为bu_flow
-=======
         gr.HTML(header)
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d:projects/gradio_app/app.py
         with gr.Row():
             # 创建一个gr.Column对象，命名为pdf_show，设置其样式为panel，缩放比例为5
             with gr.Column(variant='panel', scale=5):
-<<<<<<< HEAD:app.py
-                # 创建一个gr.Markdown对象，命名为pdf_show
-                pdf_show = gr.Markdown()
-                # 创建一个gr.Slider对象，命名为max_pages，设置其最小值为1，最大值为10，默认值为5，步长为1，标签为Max convert pages
-                max_pages = gr.Slider(1, 500, 5, step=1, label="Max convert pages")
-                # 创建一个gr.Row对象，命名为bu_flow
-                with gr.Row() as bu_flow:
-                    # 创建一个gr.Button对象，命名为change_bu，标签为Convert
-                    change_bu = gr.Button("Convert")
-                    # 创建一个gr.ClearButton对象，命名为clear_bu，设置其输入为pdf_show，默认值为Clear
-                    clear_bu = gr.ClearButton([pdf_show], value="Clear")
-                # 创建一个PDF对象，命名为pdf_show，设置其标签为Please upload pdf，交互式为True，高度为800
-                pdf_show = PDF(label="Please upload pdf", interactive=True, height=800)
-=======
-                file = gr.File(label="Please upload a PDF or image", file_types=[".pdf", ".png", ".jpeg", ".jpg"])
-                max_pages = gr.Slider(1, 10, 5, step=1, label="Max convert pages")
+                file = gr.File(label="Please upload a PDF or image", file_types=[
+                               ".pdf", ".png", ".jpeg", ".jpg"])
+                max_pages = gr.Slider(
+                    1, 500, 5, step=1, label="Max convert pages")
                 with gr.Row():
-                    layout_mode = gr.Dropdown(["layoutlmv3", "doclayout_yolo"], label="Layout model", value="layoutlmv3")
-                    language = gr.Dropdown(all_lang, label="Language", value="")
+                    layout_mode = gr.Dropdown(
+                        ["layoutlmv3", "doclayout_yolo"], label="Layout model", value="layoutlmv3")
+                    language = gr.Dropdown(
+                        all_lang, label="Language", value="")
                 with gr.Row():
-                    formula_enable = gr.Checkbox(label="Enable formula recognition", value=True)
+                    formula_enable = gr.Checkbox(
+                        label="Enable formula recognition", value=True)
                     is_ocr = gr.Checkbox(label="Force enable OCR", value=False)
-                    table_enable = gr.Checkbox(label="Enable table recognition(test)", value=False)
+                    table_enable = gr.Checkbox(
+                        label="Enable table recognition(test)", value=False)
                 with gr.Row():
                     change_bu = gr.Button("Convert")
                     clear_bu = gr.ClearButton(value="Clear")
-                pdf_show = PDF(label="PDF preview", interactive=True, height=800)
+                pdf_show = PDF(label="PDF preview",
+                               interactive=True, height=800)
                 with gr.Accordion("Examples:"):
-                    example_root = os.path.join(os.path.dirname(__file__), "examples")
+                    example_root = os.path.join(
+                        os.path.dirname(__file__), "examples")
                     gr.Examples(
                         examples=[os.path.join(example_root, _) for _ in os.listdir(example_root) if
                                   _.endswith("pdf")],
                         inputs=pdf_show
                     )
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d:projects/gradio_app/app.py
 
             # 创建一个gr.Column对象，命名为output_file，设置其样式为panel，缩放比例为5
             with gr.Column(variant='panel', scale=5):
                 # 创建一个gr.File对象，命名为output_file，设置其标签为convert result，交互式为False
-                output_file = gr.File(label="convert result", interactive=False)
+                output_file = gr.File(
+                    label="convert result", interactive=False)
                 # 创建一个gr.Tabs对象
                 with gr.Tabs():
                     # 创建一个gr.Tab对象，命名为Markdown rendering
@@ -257,19 +241,10 @@ if __name__ == "__main__":
                     with gr.Tab("Markdown text"):
                         # 创建一个gr.TextArea对象，命名为md_text，设置其行数为45，显示复制按钮
                         md_text = gr.TextArea(lines=45, show_copy_button=True)
-<<<<<<< HEAD:app.py
-        # 当change_bu被点击时，执行to_markdown函数，输入为pdf_show和max_pages，输出为md、md_text、output_file和pdf_show
-        change_bu.click(fn=to_markdown, inputs=[pdf_show, max_pages], outputs=[md, md_text, output_file, pdf_show])
-        # 当clear_bu被点击时，执行clear_bu.add函数，输入为md、pdf_show、md_text和output_file
-        clear_bu.add([md, pdf_show, md_text, output_file])
-
-    # 启动demo，设置share参数为True
-    demo.launch(share=True)
-=======
         file.upload(fn=to_pdf, inputs=file, outputs=pdf_show)
         change_bu.click(fn=to_markdown, inputs=[pdf_show, max_pages, is_ocr, layout_mode, formula_enable, table_enable, language],
                         outputs=[md, md_text, output_file, pdf_show])
-        clear_bu.add([file, md, pdf_show, md_text, output_file, is_ocr, table_enable, language])
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d:projects/gradio_app/app.py
+        clear_bu.add([file, md, pdf_show, md_text, output_file,
+                     is_ocr, table_enable, language])
 
-    demo.launch(server_name="0.0.0.0")
+    demo.launch(server_name="127.0.0.1")

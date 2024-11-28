@@ -92,10 +92,14 @@ def custom_model_init(ocr: bool = False, show_log: bool = False, lang=None,
     if model_config.__use_inside_model__:
         model_init_start = time.time()
         if model == MODEL.Paddle:
+            # 飞浆ocr模型
             from magic_pdf.model.pp_structure_v2 import CustomPaddleModel
-            custom_model = CustomPaddleModel(ocr=ocr, show_log=show_log, lang=lang)
+            custom_model = CustomPaddleModel(
+                ocr=ocr, show_log=show_log, lang=lang)
         elif model == MODEL.PEK:
+            # pdf_extract_kit模型
             from magic_pdf.model.pdf_extract_kit import CustomPEKModel
+
             # 从配置文件读取model-dir和device
             local_models_dir = get_local_models_dir()
             device = get_device()
@@ -113,14 +117,14 @@ def custom_model_init(ocr: bool = False, show_log: bool = False, lang=None,
                 table_config["enable"] = table_enable
 
             model_input = {
-                            "ocr": ocr,
-                            "show_log": show_log,
-                            "models_dir": local_models_dir,
-                            "device": device,
-                            "table_config": table_config,
-                            "layout_config": layout_config,
-                            "formula_config": formula_config,
-                            "lang": lang,
+                "ocr": ocr,
+                "show_log": show_log,
+                "models_dir": local_models_dir,
+                "device": device,
+                "table_config": table_config,
+                "layout_config": layout_config,
+                "formula_config": formula_config,
+                "lang": lang,
             }
 
             custom_model = CustomPEKModel(**model_input)
@@ -130,7 +134,8 @@ def custom_model_init(ocr: bool = False, show_log: bool = False, lang=None,
         model_init_cost = time.time() - model_init_start
         logger.info(f"model init cost: {model_init_cost}")
     else:
-        logger.error("use_inside_model is False, not allow to use inside model")
+        logger.error(
+            "use_inside_model is False, not allow to use inside model")
         exit(1)
 
     return custom_model
@@ -144,7 +149,8 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
         lang = None
 
     model_manager = ModelSingleton()
-    custom_model = model_manager.get_model(ocr, show_log, lang, layout_model, formula_enable, table_enable)
+    custom_model = model_manager.get_model(
+        ocr, show_log, lang, layout_model, formula_enable, table_enable)
 
     with fitz.open("pdf", pdf_bytes) as doc:
         pdf_page_num = doc.page_count
@@ -153,7 +159,8 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
             logger.warning("end_page_id is out of range, use images length")
             end_page_id = pdf_page_num - 1
 
-    images = load_images_from_pdf(pdf_bytes, start_page_id=start_page_id, end_page_id=end_page_id)
+    images = load_images_from_pdf(
+        pdf_bytes, start_page_id=start_page_id, end_page_id=end_page_id)
 
     model_json = []
     doc_analyze_start = time.time()
@@ -166,7 +173,8 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
             result = custom_model(img)
         else:
             result = []
-        page_info = {"page_no": index, "height": page_height, "width": page_width}
+        page_info = {"page_no": index,
+                     "height": page_height, "width": page_width}
         page_dict = {"layout_dets": result, "page_info": page_info}
         model_json.append(page_dict)
 
@@ -176,7 +184,8 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
     logger.info(f"gc time: {gc_time}")
 
     doc_analyze_time = round(time.time() - doc_analyze_start, 2)
-    doc_analyze_speed = round( (end_page_id + 1 - start_page_id) / doc_analyze_time, 2)
+    doc_analyze_speed = round(
+        (end_page_id + 1 - start_page_id) / doc_analyze_time, 2)
     logger.info(f"doc analyze time: {round(time.time() - doc_analyze_start, 2)},"
                 f" speed: {doc_analyze_speed} pages/second")
 
