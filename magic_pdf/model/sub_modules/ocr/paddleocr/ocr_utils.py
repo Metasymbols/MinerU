@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 from loguru import logger
 
@@ -71,7 +69,13 @@ def remove_intervals(original, masks):
 
 def update_det_boxes(dt_boxes, mfd_res):
     new_dt_boxes = []
+    angle_boxes_list = []
     for text_box in dt_boxes:
+
+        if calculate_is_angle(text_box):
+            angle_boxes_list.append(text_box)
+            continue
+
         text_bbox = points_to_bbox(text_box)
         masks_list = []
         for mf_box in mfd_res:
@@ -85,6 +89,9 @@ def update_det_boxes(dt_boxes, mfd_res):
             temp_dt_box.append(bbox_to_points([text_remove_mask[0], text_bbox[1], text_remove_mask[1], text_bbox[3]]))
         if len(temp_dt_box) > 0:
             new_dt_boxes.extend(temp_dt_box)
+
+    new_dt_boxes.extend(angle_boxes_list)
+
     return new_dt_boxes
 
 
@@ -143,9 +150,11 @@ def merge_det_boxes(dt_boxes):
     angle_boxes_list = []
     for text_box in dt_boxes:
         text_bbox = points_to_bbox(text_box)
-        if text_bbox[2] <= text_bbox[0] or text_bbox[3] <= text_bbox[1]:
+
+        if calculate_is_angle(text_box):
             angle_boxes_list.append(text_box)
             continue
+
         text_box_dict = {
             'bbox': text_bbox,
             'type': 'text',
@@ -200,15 +209,24 @@ def get_ocr_result_list(ocr_res, useful_list):
     ocr_result_list = []
     for box_ocr_res in ocr_res:
 
-        p1, p2, p3, p4 = box_ocr_res[0]
-        text, score = box_ocr_res[1]
-        average_angle_degrees = calculate_angle_degrees(box_ocr_res[0])
-        if average_angle_degrees > 0.5:
+        if len(box_ocr_res) == 2:
+            p1, p2, p3, p4 = box_ocr_res[0]
+            text, score = box_ocr_res[1]
+            # logger.info(f"text: {text}, score: {score}")
+            if score < 0.6:  # 过滤低置信度的结果
+                continue
+        else:
+            p1, p2, p3, p4 = box_ocr_res
+            text, score = "", 1
+        # average_angle_degrees = calculate_angle_degrees(box_ocr_res[0])
+        # if average_angle_degrees > 0.5:
+        poly = [p1, p2, p3, p4]
+        if calculate_is_angle(poly):
             # logger.info(f"average_angle_degrees: {average_angle_degrees}, text: {text}")
             # 与x轴的夹角超过0.5度，对边界做一下矫正
             # 计算几何中心
-            x_center = sum(point[0] for point in box_ocr_res[0]) / 4
-            y_center = sum(point[1] for point in box_ocr_res[0]) / 4
+            x_center = sum(point[0] for point in poly) / 4
+            y_center = sum(point[1] for point in poly) / 4
             new_height = ((p4[1] - p1[1]) + (p3[1] - p2[1])) / 2
             new_width = p3[0] - p1[0]
             p1 = [x_center - new_width / 2, y_center - new_height / 2]
@@ -232,28 +250,11 @@ def get_ocr_result_list(ocr_res, useful_list):
     return ocr_result_list
 
 
-def calculate_angle_degrees(poly):
-    # 定义对角线的顶点
-    diagonal1 = (poly[0], poly[2])
-    diagonal2 = (poly[1], poly[3])
-
-    # 计算对角线的斜率
-    def slope(p1, p2):
-        return (p2[1] - p1[1]) / (p2[0] - p1[0]) if p2[0] != p1[0] else float('inf')
-
-    slope1 = slope(diagonal1[0], diagonal1[1])
-    slope2 = slope(diagonal2[0], diagonal2[1])
-
-    # 计算对角线与x轴的夹角（以弧度为单位）
-    angle1_radians = math.atan(slope1)
-    angle2_radians = math.atan(slope2)
-
-    # 将弧度转换为角度
-    angle1_degrees = math.degrees(angle1_radians)
-    angle2_degrees = math.degrees(angle2_radians)
-
-    # 取两条对角线与x轴夹角的平均值
-    average_angle_degrees = abs((angle1_degrees + angle2_degrees) / 2)
-    # logger.info(f"average_angle_degrees: {average_angle_degrees}")
-    return average_angle_degrees
-
+def calculate_is_angle(poly):
+    p1, p2, p3, p4 = poly
+    height = ((p4[1] - p1[1]) + (p3[1] - p2[1])) / 2
+    if 0.8 * height <= (p3[1] - p1[1]) <= 1.2 * height:
+        return False
+    else:
+        # logger.info((p3[1] - p1[1])/height)
+        return True
