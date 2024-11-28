@@ -1,34 +1,32 @@
+<<<<<<< HEAD
 from magic_pdf.model.ppTableModel import ppTableModel
 from magic_pdf.model.pek_sub_modules.structeqtable.StructTableModel import StructTableModel
 from magic_pdf.model.pek_sub_modules.self_modify import ModifiedPaddleOCR
 from magic_pdf.model.pek_sub_modules.post_process import get_croped_image, latex_rm_whitespace
 from magic_pdf.model.pek_sub_modules.layoutlmv3.model_init import Layoutlmv3_Predictor
+=======
+import numpy as np
+import torch
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 from loguru import logger
 import os
 import time
-
-from magic_pdf.libs.Constants import *
-from magic_pdf.model.model_list import AtomicModel
+import cv2
+import yaml
+from PIL import Image
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
+os.environ['YOLO_VERBOSE'] = 'False'  # disable yolo logger
+
 try:
-    import cv2
-    import yaml
-    import argparse
-    import numpy as np
-    import torch
     import torchtext
 
     if torchtext.__version__ >= "0.18.0":
         torchtext.disable_torchtext_deprecation_warning()
-    from PIL import Image
-    from torchvision import transforms
-    from torch.utils.data import Dataset, DataLoader
-    from ultralytics import YOLO
-    from unimernet.common.config import Config
-    import unimernet.tasks as tasks
-    from unimernet.processors import load_processor
+except ImportError:
+    pass
 
+<<<<<<< HEAD
 except ImportError as e:
     logger.exception(e)
     logger.error(
@@ -151,6 +149,13 @@ def atom_model_init(model_name: str, **kwargs):
         exit(1)
 
     return atom_model
+=======
+from magic_pdf.libs.Constants import *
+from magic_pdf.model.model_list import AtomicModel
+from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
+from magic_pdf.model.sub_modules.model_utils import get_res_list_from_layout_res, crop_img, clean_vram
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import get_adjusted_mfdetrec_res, get_ocr_result_list
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
 
 class CustomPEKModel:
@@ -172,6 +177,7 @@ class CustomPEKModel:
         with open(config_path, "r", encoding='utf-8') as f:
             self.configs = yaml.load(f, Loader=yaml.FullLoader)
         # 初始化解析配置
+<<<<<<< HEAD
         self.apply_layout = kwargs.get(
             "apply_layout", self.configs["config"]["layout"])
         self.apply_formula = kwargs.get(
@@ -184,15 +190,38 @@ class CustomPEKModel:
         self.table_max_time = self.table_config.get(
             "max_time", TABLE_MAX_TIME_VALUE)
         self.table_model_type = self.table_config.get("model", TABLE_MASTER)
+=======
+
+        # layout config
+        self.layout_config = kwargs.get("layout_config")
+        self.layout_model_name = self.layout_config.get("model", MODEL_NAME.DocLayout_YOLO)
+
+        # formula config
+        self.formula_config = kwargs.get("formula_config")
+        self.mfd_model_name = self.formula_config.get("mfd_model", MODEL_NAME.YOLO_V8_MFD)
+        self.mfr_model_name = self.formula_config.get("mfr_model", MODEL_NAME.UniMerNet_v2_Small)
+        self.apply_formula = self.formula_config.get("enable", True)
+
+        # table config
+        self.table_config = kwargs.get("table_config")
+        self.apply_table = self.table_config.get("enable", False)
+        self.table_max_time = self.table_config.get("max_time", TABLE_MAX_TIME_VALUE)
+        self.table_model_name = self.table_config.get("model", MODEL_NAME.RAPID_TABLE)
+
+        # ocr config
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
         self.apply_ocr = ocr
+        self.lang = kwargs.get("lang", None)
+
         logger.info(
-            "DocAnalysis init, this may take some times. apply_layout: {}, apply_formula: {}, apply_ocr: {}, apply_table: {}".format(
-                self.apply_layout, self.apply_formula, self.apply_ocr, self.apply_table
+            "DocAnalysis init, this may take some times, layout_model: {}, apply_formula: {}, apply_ocr: {}, "
+            "apply_table: {}, table_model: {}, lang: {}".format(
+                self.layout_model_name, self.apply_formula, self.apply_ocr, self.apply_table, self.table_model_name,
+                self.lang
             )
         )
-        assert self.apply_layout, "DocAnalysis must contain layout model."
         # 初始化解析方案
-        self.device = kwargs.get("device", self.configs["config"]["device"])
+        self.device = kwargs.get("device", "cpu")
         logger.info("using device: {}".format(self.device))
         models_dir = kwargs.get("models_dir", os.path.join(
             root_dir, "resources", "models"))
@@ -203,13 +232,19 @@ class CustomPEKModel:
         # 初始化公式识别
         if self.apply_formula:
             # 初始化公式检测模型
-            # self.mfd_model = mfd_model_init(str(os.path.join(models_dir, self.configs["weights"]["mfd"])))
             self.mfd_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.MFD,
+<<<<<<< HEAD
                 mfd_weights=str(os.path.join(
                     models_dir, self.configs["weights"]["mfd"]))
+=======
+                mfd_weights=str(os.path.join(models_dir, self.configs["weights"][self.mfd_model_name])),
+                device=self.device
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
             )
+
             # 初始化公式解析模型
+<<<<<<< HEAD
             mfr_weight_dir = str(os.path.join(
                 models_dir, self.configs["weights"]["mfr"]))
             mfr_cfg_path = str(os.path.join(
@@ -217,6 +252,11 @@ class CustomPEKModel:
             # self.mfr_model, mfr_vis_processors = mfr_model_init(mfr_weight_dir, mfr_cfg_path, _device_=self.device)
             # self.mfr_transform = transforms.Compose([mfr_vis_processors, ])
             self.mfr_model, self.mfr_transform = atom_model_manager.get_atom_model(
+=======
+            mfr_weight_dir = str(os.path.join(models_dir, self.configs["weights"][self.mfr_model_name]))
+            mfr_cfg_path = str(os.path.join(model_config_dir, "UniMERNet", "demo.yaml"))
+            self.mfr_model = atom_model_manager.get_atom_model(
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                 atom_model_name=AtomicModel.MFR,
                 mfr_weight_dir=mfr_weight_dir,
                 mfr_cfg_path=mfr_cfg_path,
@@ -224,6 +264,7 @@ class CustomPEKModel:
             )
 
         # 初始化layout模型
+<<<<<<< HEAD
         # self.layout_model = Layoutlmv3_Predictor(
         #     str(os.path.join(models_dir, self.configs['weights']['layout'])),
         #     str(os.path.join(model_config_dir, "layoutlmv3", "layoutlmv3_base_inference.yaml")),
@@ -237,25 +278,44 @@ class CustomPEKModel:
                 model_config_dir, "layoutlmv3", "layoutlmv3_base_inference.yaml")),
             device=self.device
         )
+=======
+        if self.layout_model_name == MODEL_NAME.LAYOUTLMv3:
+            self.layout_model = atom_model_manager.get_atom_model(
+                atom_model_name=AtomicModel.Layout,
+                layout_model_name=MODEL_NAME.LAYOUTLMv3,
+                layout_weights=str(os.path.join(models_dir, self.configs['weights'][self.layout_model_name])),
+                layout_config_file=str(os.path.join(model_config_dir, "layoutlmv3", "layoutlmv3_base_inference.yaml")),
+                device=self.device
+            )
+        elif self.layout_model_name == MODEL_NAME.DocLayout_YOLO:
+            self.layout_model = atom_model_manager.get_atom_model(
+                atom_model_name=AtomicModel.Layout,
+                layout_model_name=MODEL_NAME.DocLayout_YOLO,
+                doclayout_yolo_weights=str(os.path.join(models_dir, self.configs['weights'][self.layout_model_name])),
+                device=self.device
+            )
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
         # 初始化ocr
         if self.apply_ocr:
-
-            # self.ocr_model = ModifiedPaddleOCR(show_log=show_log, det_db_box_thresh=0.3)
             self.ocr_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.OCR,
                 ocr_show_log=show_log,
-                det_db_box_thresh=0.3
+                det_db_box_thresh=0.3,
+                lang=self.lang
             )
         # init table model
         if self.apply_table:
-            table_model_dir = self.configs["weights"][self.table_model_type]
-            # self.table_model = table_model_init(self.table_model_type, str(os.path.join(models_dir, table_model_dir)),
-            #                                     max_time=self.table_max_time, _device_=self.device)
+            table_model_dir = self.configs["weights"][self.table_model_name]
             self.table_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.Table,
+<<<<<<< HEAD
                 table_model_type=self.table_model_type,
                 table_model_path=str(os.path.join(
                     models_dir, table_model_dir)),
+=======
+                table_model_name=self.table_model_name,
+                table_model_path=str(os.path.join(models_dir, table_model_dir)),
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                 table_max_time=self.table_max_time,
                 device=self.device
             )
@@ -264,17 +324,25 @@ class CustomPEKModel:
 
     def __call__(self, image):
 
-        latex_filling_list = []
-        mf_image_list = []
+        page_start = time.time()
 
         # layout检测
         layout_start = time.time()
-        layout_res = self.layout_model(image, ignore_catids=[])
+        layout_res = []
+        if self.layout_model_name == MODEL_NAME.LAYOUTLMv3:
+            # layoutlmv3
+            layout_res = self.layout_model(image, ignore_catids=[])
+        elif self.layout_model_name == MODEL_NAME.DocLayout_YOLO:
+            # doclayout_yolo
+            layout_res = self.layout_model.predict(image)
         layout_cost = round(time.time() - layout_start, 2)
-        logger.info(f"layout detection cost: {layout_cost}")
+        logger.info(f"layout detection time: {layout_cost}")
+
+        pil_img = Image.fromarray(image)
 
         if self.apply_formula:
             # 公式检测
+<<<<<<< HEAD
             mfd_res = self.mfd_model.predict(
                 image, imgsz=1888, conf=0.25, iou=0.45, verbose=True)[0]
             for xyxy, conf, cla in zip(mfd_res.boxes.xyxy.cpu(), mfd_res.boxes.conf.cpu(), mfd_res.boxes.cls.cpu()):
@@ -290,37 +358,28 @@ class CustomPEKModel:
                 bbox_img = get_croped_image(Image.fromarray(image), [
                                             xmin, ymin, xmax, ymax])
                 mf_image_list.append(bbox_img)
+=======
+            mfd_start = time.time()
+            mfd_res = self.mfd_model.predict(image)
+            logger.info(f"mfd time: {round(time.time() - mfd_start, 2)}")
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
             # 公式识别
             mfr_start = time.time()
-            dataset = MathDataset(mf_image_list, transform=self.mfr_transform)
-            dataloader = DataLoader(dataset, batch_size=64, num_workers=0)
-            mfr_res = []
-            for mf_img in dataloader:
-                mf_img = mf_img.to(self.device)
-                output = self.mfr_model.generate({'image': mf_img})
-                mfr_res.extend(output['pred_str'])
-            for res, latex in zip(latex_filling_list, mfr_res):
-                res['latex'] = latex_rm_whitespace(latex)
+            formula_list = self.mfr_model.predict(mfd_res, image)
+            layout_res.extend(formula_list)
             mfr_cost = round(time.time() - mfr_start, 2)
+<<<<<<< HEAD
             logger.info(
                 f"formula nums: {len(mf_image_list)}, mfr time: {mfr_cost}")
+=======
+            logger.info(f"formula nums: {len(formula_list)}, mfr time: {mfr_cost}")
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
-        # Select regions for OCR / formula regions / table regions
-        ocr_res_list = []
-        table_res_list = []
-        single_page_mfdetrec_res = []
-        for res in layout_res:
-            if int(res['category_id']) in [13, 14]:
-                single_page_mfdetrec_res.append({
-                    "bbox": [int(res['poly'][0]), int(res['poly'][1]),
-                             int(res['poly'][4]), int(res['poly'][5])],
-                })
-            elif int(res['category_id']) in [0, 1, 2, 4, 6, 7]:
-                ocr_res_list.append(res)
-            elif int(res['category_id']) in [5]:
-                table_res_list.append(res)
+        # 清理显存
+        clean_vram(self.device, vram_threshold=8)
 
+<<<<<<< HEAD
         #  Unified crop img logic
         def crop_img(input_res, input_pil_img, crop_paste_x=0, crop_paste_y=0):
             crop_xmin, crop_ymin = int(
@@ -342,12 +401,17 @@ class CustomPEKModel:
             return return_image, return_list
 
         pil_img = Image.fromarray(image)
+=======
+        # 从layout_res中获取ocr区域、表格区域、公式区域
+        ocr_res_list, table_res_list, single_page_mfdetrec_res = get_res_list_from_layout_res(layout_res)
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
         # ocr识别
         if self.apply_ocr:
             ocr_start = time.time()
             # Process each area that requires OCR processing
             for res in ocr_res_list:
+<<<<<<< HEAD
                 new_image, useful_list = crop_img(
                     res, pil_img, crop_paste_x=50, crop_paste_y=50)
                 paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
@@ -367,6 +431,10 @@ class CustomPEKModel:
                         adjusted_mfdetrec_res.append({
                             "bbox": [x0, y0, x1, y1],
                         })
+=======
+                new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
+                adjusted_mfdetrec_res = get_adjusted_mfdetrec_res(single_page_mfdetrec_res, useful_list)
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
                 # OCR recognition
                 new_image = cv2.cvtColor(
@@ -376,25 +444,11 @@ class CustomPEKModel:
 
                 # Integration results
                 if ocr_res:
-                    for box_ocr_res in ocr_res:
-                        p1, p2, p3, p4 = box_ocr_res[0]
-                        text, score = box_ocr_res[1]
-
-                        # Convert the coordinates back to the original coordinate system
-                        p1 = [p1[0] - paste_x + xmin, p1[1] - paste_y + ymin]
-                        p2 = [p2[0] - paste_x + xmin, p2[1] - paste_y + ymin]
-                        p3 = [p3[0] - paste_x + xmin, p3[1] - paste_y + ymin]
-                        p4 = [p4[0] - paste_x + xmin, p4[1] - paste_y + ymin]
-
-                        layout_res.append({
-                            'category_id': 15,
-                            'poly': p1 + p2 + p3 + p4,
-                            'score': round(score, 2),
-                            'text': text,
-                        })
+                    ocr_result_list = get_ocr_result_list(ocr_res, useful_list)
+                    layout_res.extend(ocr_result_list)
 
             ocr_cost = round(time.time() - ocr_start, 2)
-            logger.info(f"ocr cost: {ocr_cost}")
+            logger.info(f"ocr time: {ocr_cost}")
 
         # 表格识别 table recognition
         if self.apply_table:
@@ -402,17 +456,24 @@ class CustomPEKModel:
             for res in table_res_list:
                 new_image, _ = crop_img(res, pil_img)
                 single_table_start_time = time.time()
+<<<<<<< HEAD
                 logger.info(
                     "---------table recognition processing begins-------")
                 latex_code = None
+=======
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                 html_code = None
-                if self.table_model_type == STRUCT_EQTABLE:
+                if self.table_model_name == MODEL_NAME.STRUCT_EQTABLE:
                     with torch.no_grad():
-                        latex_code = self.table_model.image2latex(new_image)[0]
-                else:
+                        table_result = self.table_model.predict(new_image, "html")
+                        if len(table_result) > 0:
+                            html_code = table_result[0]
+                elif self.table_model_name == MODEL_NAME.TABLE_MASTER:
                     html_code = self.table_model.img2html(new_image)
-
+                elif self.table_model_name == MODEL_NAME.RAPID_TABLE:
+                    html_code, table_cell_bboxes, elapse = self.table_model.predict(new_image)
                 run_time = time.time() - single_table_start_time
+<<<<<<< HEAD
                 logger.info(
                     f"------table recognition processing ends within {run_time}s-----")
                 if run_time > self.table_max_time:
@@ -423,9 +484,17 @@ class CustomPEKModel:
                 if latex_code:
                     expected_ending = latex_code.strip().endswith('end{tabular}') or latex_code.strip().endswith(
                         'end{table}')
+=======
+                if run_time > self.table_max_time:
+                    logger.warning(f"table recognition processing exceeds max time {self.table_max_time}s")
+                # 判断是否返回正常
+                if html_code:
+                    expected_ending = html_code.strip().endswith('</html>') or html_code.strip().endswith('</table>')
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
                     if expected_ending:
-                        res["latex"] = latex_code
+                        res["html"] = html_code
                     else:
+<<<<<<< HEAD
                         logger.warning(
                             f"--------table recognition processing fails--------")
                 elif html_code:
@@ -435,5 +504,13 @@ class CustomPEKModel:
                         f"-------table recognition processing fails-------")
             table_cost = round(time.time() - table_start, 2)
             logger.info(f"table cost: {table_cost}")
+=======
+                        logger.warning(f"table recognition processing fails, not found expected HTML table end")
+                else:
+                    logger.warning(f"table recognition processing fails, not get html return")
+            logger.info(f"table time: {round(time.time() - table_start, 2)}")
+
+        logger.info(f"-----page total time: {round(time.time() - page_start, 2)}-----")
+>>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
 
         return layout_res
