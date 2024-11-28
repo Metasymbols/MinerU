@@ -2,10 +2,14 @@
 import os
 import time
 
+
 import cv2
 import numpy as np
 import torch
+import numpy as np
+import torch
 import yaml
+from loguru import logger
 from loguru import logger
 from PIL import Image
 
@@ -21,8 +25,13 @@ except ImportError:
     pass
 
 from magic_pdf.config.constants import *
+from magic_pdf.config.constants import *
 from magic_pdf.model.model_list import AtomicModel
 from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
+from magic_pdf.model.sub_modules.model_utils import (
+    clean_vram, crop_img, get_res_list_from_layout_res)
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
+    get_adjusted_mfdetrec_res, get_ocr_result_list)
 from magic_pdf.model.sub_modules.model_utils import (
     clean_vram, crop_img, get_res_list_from_layout_res)
 from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
@@ -46,10 +55,15 @@ class CustomPEKModel:
         # 构建 model_configs.yaml 文件的完整路径
         config_path = os.path.join(model_config_dir, 'model_configs.yaml')
         with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             self.configs = yaml.load(f, Loader=yaml.FullLoader)
         # 初始化解析配置
 
         # layout config
+        self.layout_config = kwargs.get('layout_config')
+        self.layout_model_name = self.layout_config.get(
+            'model', MODEL_NAME.DocLayout_YOLO
+        )
         self.layout_config = kwargs.get('layout_config')
         self.layout_model_name = self.layout_config.get(
             'model', MODEL_NAME.DocLayout_YOLO
@@ -87,20 +101,10 @@ class CustomPEKModel:
             )
         )
         # 初始化解析方案
-<<<<<<< HEAD
         self.device = kwargs.get("device", "cpu")
         logger.info("using device: {}".format(self.device))
-        models_dir = kwargs.get("models_dir", os.path.join(
-            root_dir, "resources", "models"))
+        models_dir = kwargs.get("models_dir", os.path.join(root_dir, "resources", "models"))
         logger.info("using models_dir: {}".format(models_dir))
-=======
-        self.device = kwargs.get('device', 'cpu')
-        logger.info('using device: {}'.format(self.device))
-        models_dir = kwargs.get(
-            'models_dir', os.path.join(root_dir, 'resources', 'models')
-        )
-        logger.info('using models_dir: {}'.format(models_dir))
->>>>>>> 52ef1bc782ddf8fac0fae519fd61425eea3e5786
 
         atom_model_manager = AtomModelSingleton()
 
@@ -221,20 +225,9 @@ class CustomPEKModel:
             new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
             adjusted_mfdetrec_res = get_adjusted_mfdetrec_res(single_page_mfdetrec_res, useful_list)
 
-<<<<<<< HEAD
                 # OCR recognition
-                new_image = cv2.cvtColor(
-                    np.asarray(new_image), cv2.COLOR_RGB2BGR)
-                ocr_res = self.ocr_model.ocr(
-                    new_image, mfd_res=adjusted_mfdetrec_res)[0]
-=======
-            # OCR recognition
-            new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
-            if self.apply_ocr:
+                new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
                 ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
-            else:
-                ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res, rec=False)[0]
->>>>>>> 52ef1bc782ddf8fac0fae519fd61425eea3e5786
 
             # Integration results
             if ocr_res:
