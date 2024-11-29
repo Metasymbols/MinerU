@@ -42,11 +42,10 @@ class BaseModel:
     def predict(self, *args, **kwargs):
         raise NotImplementedError("Subclasses should implement this method.")
 
+
 # 各个具体模型的封装类
-
-
 class StructTableModelWrapper(BaseModel):
-    def __init__(self, model_path, max_time, max_new_tokens=2048):
+    def __init__(self, model_path, max_time, max_new_tokens=1024):
         self.model = StructTableModel(model_path, max_new_tokens, max_time)
 
     def predict(self, *args, **kwargs):
@@ -58,7 +57,7 @@ class TableMasterPaddleModelWrapper(BaseModel):
         self.model = TableMasterPaddleModel(config)
 
     def predict(self, *args, **kwargs):
-        return self.model.predict(*args, **kwargs)
+        return self.model.img2html(*args, **kwargs)
 
 
 class RapidTableModelWrapper(BaseModel):
@@ -90,7 +89,7 @@ class Layoutlmv3_PredictorWrapper(BaseModel):
         self.model = Layoutlmv3_Predictor(weight, config_file, device)
 
     def predict(self, *args, **kwargs):
-        return self.model.predict(*args, **kwargs)
+        return self.model(*args, **kwargs)
 
 
 class DocLayoutYOLOModelWrapper(BaseModel):
@@ -104,12 +103,29 @@ class DocLayoutYOLOModelWrapper(BaseModel):
 
 
 class ModifiedPaddleOCRWrapper(BaseModel):
-    def __init__(self, show_log=False, det_db_box_thresh=0.3, lang=None, use_dilation=True, det_db_unclip_ratio=1.8):
-        self.model = ModifiedPaddleOCR(
-            show_log, det_db_box_thresh, lang, use_dilation, det_db_unclip_ratio)
+    def __init__(self, 
+                 show_log=False, 
+                 det_db_box_thresh=0.3, 
+                 lang=None, 
+                 use_dilation=True, 
+                 det_db_unclip_ratio=1.8):
+        if lang is not None and lang != '':
+            self.model = ModifiedPaddleOCR(
+                show_log=show_log,
+                det_db_box_thresh=det_db_box_thresh,
+                lang=lang,
+                use_dilation=use_dilation,
+                det_db_unclip_ratio=det_db_unclip_ratio,)
+        else:
+            self.model = ModifiedPaddleOCR(
+                show_log=show_log,
+                det_db_box_thresh=det_db_box_thresh,
+                # lang=lang,
+                # use_dilation=use_dilation,
+                det_db_unclip_ratio=det_db_unclip_ratio,)
 
     def predict(self, *args, **kwargs):
-        return self.model.predict(*args, **kwargs)
+        return self.model.ocr(*args, **kwargs)
 
 
 # 简化的工厂模式
@@ -123,7 +139,7 @@ class ModelFactory:
             AtomicModel.MFR: ModelFactory._create_mfr_model,
             AtomicModel.OCR: ModelFactory._create_ocr_model,
             AtomicModel.Table: ModelFactory._create_table_model,
-            AtomicModel.Layout: ModelFactory._create_doclayout_yolo_model,
+            # AtomicModel.Layout: ModelFactory._create_doclayout_yolo_model,
         }
 
         create_func = model_mapping.get(model_name)
@@ -135,18 +151,18 @@ class ModelFactory:
 
     @staticmethod
     def _create_layout_model(**kwargs):
-        if model_name == AtomicModel.Layout:
-            layout_model_name = kwargs.get("layout_model_name")
-            if layout_model_name == MODEL_NAME.LAYOUTLMv3:
-                return Layoutlmv3_PredictorWrapper(
-                    kwargs.get("layout_weights", ""),
-                    kwargs.get("layout_config_file", ""),
-                    kwargs.get("device")
-                )
-            elif layout_model_name == MODEL_NAME.DocLayout_YOLO:
-                return DocLayoutYOLOModelWrapper(
-                    kwargs.get("doclayout_yolo_weights"),
-                    kwargs.get("device")
+        
+        layout_model_name = kwargs.get("layout_model_name")
+        if layout_model_name == MODEL_NAME.LAYOUTLMv3:
+            return Layoutlmv3_PredictorWrapper(
+                kwargs.get("layout_weights", ""),
+                kwargs.get("layout_config_file", ""),
+                kwargs.get("device")
+            )
+        elif layout_model_name == MODEL_NAME.DocLayout_YOLO:
+            return DocLayoutYOLOModelWrapper(
+                kwargs.get("doclayout_yolo_weights"),
+                kwargs.get("device")
                     )
 
     @staticmethod
@@ -165,7 +181,7 @@ class ModelFactory:
     @staticmethod
     def _create_ocr_model(**kwargs):
         return ModifiedPaddleOCRWrapper(
-            kwargs.get("ocr_show_log", False),
+            kwargs.get("show_log", False),
             kwargs.get("det_db_box_thresh", 0.3),
             kwargs.get("lang"),
             kwargs.get("use_dilation", True),
@@ -179,24 +195,26 @@ class ModelFactory:
         max_time = kwargs.get("table_max_time", 60)
         device = kwargs.get("device", "cpu")
 
-        table_model_mapping = {
-            MODEL_NAME.STRUCT_EQTABLE: StructTableModelWrapper,
-            MODEL_NAME.TABLE_MASTER: TableMasterPaddleModelWrapper,
-            MODEL_NAME.RAPID_TABLE: RapidTableModelWrapper,
-        }
-
-        model_cls = table_model_mapping.get(table_model_type)
-        if model_cls:
-            return model_cls(model_path, max_time) if model_cls == StructTableModelWrapper else model_cls({'model_dir': model_path, 'device': device})
+        if table_model_type == MODEL_NAME.STRUCT_EQTABLE:
+            table_model = StructTableModelWrapper(model_path, max_new_tokens=2048, max_time=max_time)
+        elif table_model_type == MODEL_NAME.TABLE_MASTER:
+            table_model = TableMasterPaddleModelWrapper({
+                'model_dir': model_path,
+                'device': device
+            })
+        elif table_model_type == MODEL_NAME.RAPID_TABLE:
+            table_model = RapidTableModelWrapper()
         else:
-            logger.error("Invalid table model type")
-            raise ValueError("Invalid table model type")
+            logger.error('table model type not allowed')
+            
 
-    @staticmethod
-    def _create_doclayout_yolo_model(**kwargs):
-        return DocLayoutYOLOModelWrapper(
-            kwargs.get("doclayout_yolo_weights"), 
-            kwargs.get("device"))
+        return table_model
+
+    # @staticmethod
+    # def _create_doclayout_yolo_model(**kwargs):
+    #     return DocLayoutYOLOModelWrapper(
+    #         kwargs.get("doclayout_yolo_weights"), 
+    #         kwargs.get("device"))
 
 
 # 缓存优化：使用 lru_cache 来缓存模型实例，减少重复计算
@@ -230,27 +248,75 @@ class AtomModelSingleton:
 
 # 测试示例
 if __name__ == "__main__":
-    # pass
- 
-   
+    # # 加载图像
+    import cv2
+    image = cv2.imread(r"G:\Workspace\code\py_code\MinerU\demo\demo2_页面_5.png")
+
     singleton = AtomModelSingleton()
 
     # 模拟获取不同的模型
+    layout_model = singleton.get_atom_model(
+        atom_model_name= AtomicModel.Layout,
+        layout_model_name=MODEL_NAME.LAYOUTLMv3,
+        layout_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\Layout\LayoutLMv3\model_final.pth",
+        layout_config_file=r"G:\Workspace\code\py_code\MinerU\magic_pdf\resources\model_config\layoutlmv3\layoutlmv3_base_inference.yaml",
+        device="cpu")
+    print(layout_model.predict(image))
+    
+    # ##############
     # layout_model = singleton.get_atom_model(
     #     atom_model_name= AtomicModel.Layout,
-    #     layout_model_name=MODEL_NAME.LAYOUTLMv3,
-    #     layout_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\Layout\LayoutLMv3\model_final.pth",
+    #     layout_model_name=MODEL_NAME.DocLayout_YOLO,
     #     doclayout_yolo_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\Layout\YOLO\doclayout_yolo_ft.pt",
-    #     layout_config_file=r"G:\Workspace\code\py_code\MinerU\magic_pdf\resources\model_config\layoutlmv3\layoutlmv3_base_inference.yaml",
     #     device="cpu")
-    # # 加载图像
-    # import cv2
-    # image = cv2.imread(r"G:\Workspace\code\py_code\MinerU\demo\demo2_页面_1.png")
     # print(layout_model.predict(image))
     
-    #######################
-    mfd_model = singleton.get_atom_model(
-        atom_model_name=AtomicModel.MFD, 
-        mfd_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFD\YOLO\yolo_v8_ft.pt", 
-        device="cpu")
-    print(mfd_model)
+    # #######################
+    # mfd_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.MFD, 
+    #     mfd_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFD\YOLO\yolo_v8_ft.pt", 
+    #     device="cpu")
+    # print(mfd_model.predict(image))
+    
+    # # ##############
+    # mfr_res = mfd_model.predict(image)
+    # mfr_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.MFR, 
+    #     mfr_weight_dir=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFR\unimernet_small", 
+    #     mfr_cfg_path=r"G:\Workspace\code\py_code\MinerU\magic_pdf\resources\model_config\UniMERNet\demo.yaml",
+    #     device="cpu")
+    # print(mfr_model.predict(mfr_res,image))
+    
+    # #################
+    # # cn 中文 en 英文
+    # ocr_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.OCR, 
+    #     lang="en"
+    #     )
+    # print(ocr_model.predict(image))
+    
+    # #################
+    # # struct_eqtable 必须有CUDA才可以调用
+    # table_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.Table, 
+    #     table_model_name=MODEL_NAME.STRUCT_EQTABLE,
+    #     table_model_path=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\TabRec\StructEqTable"
+    #     )
+    # print(table_model.predict(image))
+    
+    # ###############
+    # table_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.Table, 
+    #     table_model_name=MODEL_NAME.TABLE_MASTER,
+    #     table_model_path=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\TabRec\TableMaster"
+    #     )
+    # print(table_model.predict(image))
+    
+    # ###########################
+    # table_model = singleton.get_atom_model(
+    #     atom_model_name=AtomicModel.Table, 
+    #     table_model_name=MODEL_NAME.RAPID_TABLE,
+    #     )
+    # print(table_model.predict(image))
+    
+    

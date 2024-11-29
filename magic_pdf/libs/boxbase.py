@@ -3,28 +3,43 @@ import math
 
 def _is_in_or_part_overlap(box1, box2) -> bool:
     """两个bbox是否有部分重叠或者包含."""
+    # 检查两个bbox是否为None
     if box1 is None or box2 is None:
         return False
 
+    # 解包bbox坐标
     x0_1, y0_1, x1_1, y1_1 = box1
     x0_2, y0_2, x1_2, y1_2 = box2
 
+    # 检查两个bbox是否有重叠部分
     return not (x1_1 < x0_2 or  # box1在box2的左边
                 x0_1 > x1_2 or  # box1在box2的右边
                 y1_1 < y0_2 or  # box1在box2的上边
                 y0_1 > y1_2)  # box1在box2的下边
 
-
 def _is_in_or_part_overlap_with_area_ratio(box1,
                                            box2,
                                            area_ratio_threshold=0.6):
-    """判断box1是否在box2里面，或者box1和box2有部分重叠，且重叠面积占box1的比例超过area_ratio_threshold."""
+    """
+    判断box1是否在box2里面，或者box1和box2有部分重叠，且重叠面积占box1的比例超过area_ratio_threshold。
+    
+    参数:
+    box1: list，表示第一个框的坐标[x0, y0, x1, y1]。
+    box2: list，表示第二个框的坐标[x0, y0, x1, y1]。
+    area_ratio_threshold: float，重叠面积的阈值， 默认值为0.6。
+    
+    返回:
+    bool，如果box1在box2内或部分重叠且重叠面积比例超过阈值则返回True，否则返回False。
+    """
+    # 检查输入的框是否为空
     if box1 is None or box2 is None:
         return False
 
+    # 解包框的坐标
     x0_1, y0_1, x1_1, y1_1 = box1
     x0_2, y0_2, x1_2, y1_2 = box2
 
+    # 检查框是否完全重合或部分重叠
     if not _is_in_or_part_overlap(box1, box2):
         return False
 
@@ -38,14 +53,16 @@ def _is_in_or_part_overlap_with_area_ratio(box1,
     # 计算box1的面积
     box1_area = (x1_1 - x0_1) * (y1_1 - y0_1)
 
+    # 判断重叠面积是否超过box1面积的阈值
     return overlap_area / box1_area > area_ratio_threshold
-
 
 def _is_in(box1, box2) -> bool:
     """box1是否完全在box2里面."""
+    # 解包两个框的坐标
     x0_1, y0_1, x1_1, y1_1 = box1
     x0_2, y0_2, x1_2, y1_2 = box2
 
+    # 检查box1是否在box2内
     return (x0_1 >= x0_2 and  # box1的左边界不在box2的左边外
             y0_1 >= y0_2 and  # box1的上边界不在box2的上边外
             x1_1 <= x1_2 and  # box1的右边界不在box2的右边外
@@ -53,12 +70,23 @@ def _is_in(box1, box2) -> bool:
 
 
 def _is_part_overlap(box1, box2) -> bool:
-    """两个bbox是否有部分重叠，但不完全包含."""
+    """
+    判断两个bbox是否有部分重叠，但不完全包含。
+
+    Args:
+        box1: 第一个bbox
+        box2: 第二个bbox
+
+    Returns:
+        如果两个bbox有部分重叠且不完全包含对方，则返回True；否则返回False。
+    """
+    # 检查输入是否有效，如果任一bbox为None，则无重叠，返回False
     if box1 is None or box2 is None:
         return False
 
+    # 确保两个bbox有部分重叠，但不完全包含
+    # 使用_is_in_or_part_overlap函数判断是否有重叠，使用_is_in函数确保不完全包含
     return _is_in_or_part_overlap(box1, box2) and not _is_in(box1, box2)
-
 
 def _left_intersect(left_box, right_box):
     """检查两个box的左边界是否有交集，也就是left_box的右边界是否在right_box的左边界内."""

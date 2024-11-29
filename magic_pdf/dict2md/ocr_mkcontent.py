@@ -219,14 +219,6 @@ def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason
         para_content = {'type': 'table', 'img_path': '', 'table_caption': [], 'table_footnote': []}
         for block in para_block['blocks']:
             if block['type'] == BlockType.TableBody:
-<<<<<<< HEAD
-                if block["lines"][0]["spans"][0].get('latex', ''):
-                    para_content['table_body'] = f"\n\n$\n {block['lines'][0]['spans'][0]['latex']}\n$\n\n"
-                elif block["lines"][0]["spans"][0].get('html', ''):
-                    para_content['table_body'] = f"\n\n{block['lines'][0]['spans'][0]['html']}\n\n"
-                para_content['img_path'] = join_path(
-                    img_buket_path, block["lines"][0]["spans"][0]['image_path'])
-=======
                 for line in block['lines']:
                     for span in line['spans']:
                         if span['type'] == ContentType.Table:
@@ -239,7 +231,6 @@ def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason
                             if span.get('image_path', ''):
                                 para_content['img_path'] = join_path(img_buket_path, span['image_path'])
 
->>>>>>> eadf4ce7c3ac4d502ee626738b72da9b71819c4d
             if block['type'] == BlockType.TableCaption:
                 para_content['table_caption'].append(merge_para_with_text(block))
             if block['type'] == BlockType.TableFootnote:
