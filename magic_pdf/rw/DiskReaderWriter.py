@@ -1,6 +1,7 @@
 import os
-from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
+
 from loguru import logger
+from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
 
 
 class DiskReaderWriter(AbsReaderWriter):
@@ -55,7 +56,7 @@ class DiskReaderWriter(AbsReaderWriter):
 if __name__ == "__main__":
     if 0:
         file_path = "io/test/example.txt"
-        drw = DiskReaderWriter("D:\projects\papayfork\Magic-PDF\magic_pdf")
+        drw = DiskReaderWriter("D:\\projects\\papayfork\\Magic-PDF\\magic_pdf")
 
         # 写入内容到文件
         drw.write(b"Hello, World!", path="io/test/example.txt", mode="binary")
@@ -71,4 +72,3 @@ if __name__ == "__main__":
 
         content_bin = drw.read_offset("1.txt", offset=1, limit=2)
         assert content_bin == b"BC"
-

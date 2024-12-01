@@ -1,7 +1,6 @@
 import json
 
 from loguru import logger
-
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.data.data_reader_writer import DataWriter
 from magic_pdf.libs.commons import join_path
@@ -94,5 +93,6 @@ if __name__ == '__main__':
 
     md_writer = DataWriter(write_path)
     md_writer.write_string('19983-00.md', md_content)
-    md_writer.write_string('19983-00.json', json.dumps(pipe.pdf_mid_data, ensure_ascii=False, indent=4))
+    md_writer.write_string(
+        '19983-00.json', json.dumps(pipe.pdf_mid_data, ensure_ascii=False, indent=4))
     md_writer.write_string('19983-00.txt', str(content_list))

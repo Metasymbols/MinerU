@@ -1,5 +1,4 @@
 from loguru import logger
-
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.data.data_reader_writer import DataWriter
 from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze

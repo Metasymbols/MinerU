@@ -77,7 +77,8 @@ def _remove_overlap_between_bboxes(arr):
 
 
 def remove_overlap_between_bbox_for_span(spans):
-    arr = [{'bbox': span['bbox'], 'score': span.get('score', 0.1)} for span in spans]
+    arr = [{'bbox': span['bbox'], 'score': span.get(
+        'score', 0.1)} for span in spans]
     res, drop_reasons = _remove_overlap_between_bboxes(arr)
     ret = []
     for i in range(len(res)):

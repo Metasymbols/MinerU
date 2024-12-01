@@ -2,11 +2,10 @@ import os
 
 import cv2
 import numpy as np
+from magic_pdf.config.constants import *  # noqa: F403
+from PIL import Image
 from ppstructure.table.predict_table import TableSystem
 from ppstructure.utility import init_args
-from PIL import Image
-
-from magic_pdf.config.constants import *  # noqa: F403
 
 
 class TableMasterPaddleModel(object):

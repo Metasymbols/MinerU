@@ -4,9 +4,8 @@ import os
 
 import click
 import fitz
-from loguru import logger
-
 import magic_pdf.model as model_config
+from loguru import logger
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.data.data_reader_writer import FileBasedDataWriter
 from magic_pdf.libs.draw_bbox import (draw_layout_bbox, draw_line_sort_bbox,
@@ -56,11 +55,13 @@ def prepare_env(output_dir, pdf_file_name, method):
 def convert_pdf_bytes_to_bytes_by_pymupdf(pdf_bytes, start_page_id=0, end_page_id=None):
     document = fitz.open('pdf', pdf_bytes)
     output_document = fitz.open()
-    end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else len(document) - 1
+    end_page_id = end_page_id if end_page_id is not None and end_page_id >= 0 else len(
+        document) - 1
     if end_page_id > len(document) - 1:
         logger.warning('end_page_id is out of range, use pdf_docs length')
         end_page_id = len(document) - 1
-    output_document.insert_pdf(document, from_page=start_page_id, to_page=end_page_id)
+    output_document.insert_pdf(
+        document, from_page=start_page_id, to_page=end_page_id)
     output_bytes = output_document.tobytes()
     return output_bytes
 
@@ -97,7 +98,8 @@ def do_parse(
     if lang == "":
         lang = None
 
-    pdf_bytes = convert_pdf_bytes_to_bytes_by_pymupdf(pdf_bytes, start_page_id, end_page_id)
+    pdf_bytes = convert_pdf_bytes_to_bytes_by_pymupdf(
+        pdf_bytes, start_page_id, end_page_id)
 
     orig_model_list = copy.deepcopy(model_list)
     local_image_dir, local_md_dir = prepare_env(output_dir, pdf_file_name,
@@ -144,11 +146,13 @@ def do_parse(
     if f_draw_span_bbox:
         draw_span_bbox(pdf_info, pdf_bytes, local_md_dir, pdf_file_name)
     if f_draw_model_bbox:
-        draw_model_bbox(copy.deepcopy(orig_model_list), pdf_bytes, local_md_dir, pdf_file_name)
+        draw_model_bbox(copy.deepcopy(orig_model_list),
+                        pdf_bytes, local_md_dir, pdf_file_name)
     if f_draw_line_sort_bbox:
         draw_line_sort_bbox(pdf_info, pdf_bytes, local_md_dir, pdf_file_name)
 
-    md_content = pipe.pipe_mk_markdown(image_dir, drop_mode=DropMode.NONE, md_make_mode=f_make_md_mode)
+    md_content = pipe.pipe_mk_markdown(
+        image_dir, drop_mode=DropMode.NONE, md_make_mode=f_make_md_mode)
     if f_dump_md:
         md_writer.write_string(
             f'{pdf_file_name}.md',

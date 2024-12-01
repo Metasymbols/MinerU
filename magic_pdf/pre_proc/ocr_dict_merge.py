@@ -1,5 +1,6 @@
 from magic_pdf.config.ocr_content_type import BlockType, ContentType
-from magic_pdf.libs.boxbase import __is_overlaps_y_exceeds_threshold, calculate_overlap_area_in_bbox1_area_ratio
+from magic_pdf.libs.boxbase import (__is_overlaps_y_exceeds_threshold,
+                                    calculate_overlap_area_in_bbox1_area_ratio)
 
 
 # 将每一个line中的span从左到右排序

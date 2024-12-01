@@ -1,7 +1,5 @@
 import copy
 
-from loguru import logger
-
 from magic_pdf.config.constants import CROSS_PAGE, LINES_DELETED
 from magic_pdf.config.ocr_content_type import BlockType, ContentType
 from magic_pdf.libs.language import detect_lang
@@ -279,11 +277,14 @@ def __merge_2_text_blocks(block1, block2):
                 if len(first_line['spans']) > 0:
                     first_span = first_line['spans'][0]
                     if len(first_span['content']) > 0:
-                        span_start_with_num = first_span['content'][0].isdigit()
-                        span_start_with_big_char = first_span['content'][0].isupper()
+                        span_start_with_num = first_span['content'][0].isdigit(
+                        )
+                        span_start_with_big_char = first_span['content'][0].isupper(
+                        )
                         if (
                             # 上一个block的最后一个line的右边界和block的右边界差距不超过line_height
-                            abs(block2['bbox_fs'][2] - last_line['bbox'][2]) < line_height
+                            abs(block2['bbox_fs'][2] - \
+                                last_line['bbox'][2]) < line_height
                             # 上一个block的最后一个span不是以特定符号结尾
                             and not last_span['content'].endswith(LINE_STOP_FLAG)
                             # 两个block宽度差距超过2倍也不合并

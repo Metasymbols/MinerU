@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 
 import click
-
 import magic_pdf.model as model_config
 from magic_pdf.data.data_reader_writer import FileBasedDataReader, S3DataReader
 from magic_pdf.libs.config_reader import get_s3_config

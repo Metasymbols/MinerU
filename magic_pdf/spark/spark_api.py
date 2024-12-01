@@ -1,5 +1,4 @@
 from loguru import logger
-
 from magic_pdf.config.drop_reason import DropReason
 
 
@@ -40,7 +39,6 @@ def get_bookname(jso: dict):
 
 
 def spark_json_extractor(jso: dict) -> dict:
-
     """从json中提取数据，返回一个dict."""
 
     return {

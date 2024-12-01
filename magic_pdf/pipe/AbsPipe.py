@@ -47,11 +47,13 @@ class AbsPipe(ABC):
         raise NotImplementedError
 
     def pipe_mk_uni_format(self, img_parent_path: str, drop_mode=DropMode.WHOLE_PDF):
-        content_list = AbsPipe.mk_uni_format(self.get_compress_pdf_mid_data(), img_parent_path, drop_mode)
+        content_list = AbsPipe.mk_uni_format(
+            self.get_compress_pdf_mid_data(), img_parent_path, drop_mode)
         return content_list
 
     def pipe_mk_markdown(self, img_parent_path: str, drop_mode=DropMode.WHOLE_PDF, md_make_mode=MakeMode.MM_MD):
-        md_content = AbsPipe.mk_markdown(self.get_compress_pdf_mid_data(), img_parent_path, drop_mode, md_make_mode)
+        md_content = AbsPipe.mk_markdown(
+            self.get_compress_pdf_mid_data(), img_parent_path, drop_mode, md_make_mode)
         return md_content
 
     @staticmethod
@@ -59,12 +61,14 @@ class AbsPipe(ABC):
         """根据pdf的元数据，判断是文本pdf，还是ocr pdf."""
         pdf_meta = pdf_meta_scan(pdf_bytes)
         if pdf_meta.get('_need_drop', False):  # 如果返回了需要丢弃的标志，则抛出异常
-            raise Exception(f"pdf meta_scan need_drop,reason is {pdf_meta['_drop_reason']}")
+            raise Exception(
+                f"pdf meta_scan need_drop,reason is {pdf_meta['_drop_reason']}")
         else:
             is_encrypted = pdf_meta['is_encrypted']
             is_needs_password = pdf_meta['is_needs_password']
             if is_encrypted or is_needs_password:  # 加密的，需要密码的，没有页面的，都不处理
-                raise Exception(f'pdf meta_scan need_drop,reason is {DropReason.ENCRYPTED}')
+                raise Exception(
+                    f'pdf meta_scan need_drop,reason is {DropReason.ENCRYPTED}')
             else:
                 is_text_pdf, results = classify(
                     pdf_meta['total_page'],
@@ -86,7 +90,8 @@ class AbsPipe(ABC):
         """根据pdf类型，生成统一格式content_list."""
         pdf_mid_data = JsonCompressor.decompress_json(compressed_pdf_mid_data)
         pdf_info_list = pdf_mid_data['pdf_info']
-        content_list = union_make(pdf_info_list, MakeMode.STANDARD_FORMAT, drop_mode, img_buket_path)
+        content_list = union_make(
+            pdf_info_list, MakeMode.STANDARD_FORMAT, drop_mode, img_buket_path)
         return content_list
 
     @staticmethod
@@ -94,5 +99,6 @@ class AbsPipe(ABC):
         """根据pdf类型，markdown."""
         pdf_mid_data = JsonCompressor.decompress_json(compressed_pdf_mid_data)
         pdf_info_list = pdf_mid_data['pdf_info']
-        md_content = union_make(pdf_info_list, md_make_mode, drop_mode, img_buket_path)
+        md_content = union_make(
+            pdf_info_list, md_make_mode, drop_mode, img_buket_path)
         return md_content

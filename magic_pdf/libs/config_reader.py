@@ -4,7 +4,6 @@ import json
 import os
 
 from loguru import logger
-
 from magic_pdf.config.constants import MODEL_NAME
 from magic_pdf.libs.commons import parse_bucket_key
 
@@ -46,7 +45,8 @@ def get_s3_config(bucket_name: str):
 
 
 def get_s3_config_dict(path: str):
-    access_key, secret_key, storage_endpoint = get_s3_config(get_bucket_name(path))
+    access_key, secret_key, storage_endpoint = get_s3_config(
+        get_bucket_name(path))
     return {'ak': access_key, 'sk': secret_key, 'endpoint': storage_endpoint}
 
 
@@ -59,7 +59,8 @@ def get_local_models_dir():
     config = read_config()
     models_dir = config.get('models-dir')
     if models_dir is None:
-        logger.warning(f"'models-dir' not found in {CONFIG_FILE_NAME}, use '/tmp/models' as default")
+        logger.warning(
+            f"'models-dir' not found in {CONFIG_FILE_NAME}, use '/tmp/models' as default")
         return '/tmp/models'
     else:
         return models_dir
@@ -70,8 +71,10 @@ def get_local_layoutreader_model_dir():
     layoutreader_model_dir = config.get('layoutreader-model-dir')
     if layoutreader_model_dir is None or not os.path.exists(layoutreader_model_dir):
         home_dir = os.path.expanduser('~')
-        layoutreader_at_modelscope_dir_path = os.path.join(home_dir, '.cache/modelscope/hub/ppaanngggg/layoutreader')
-        logger.warning(f"'layoutreader-model-dir' not exists, use {layoutreader_at_modelscope_dir_path} as default")
+        layoutreader_at_modelscope_dir_path = os.path.join(
+            home_dir, '.cache/modelscope/hub/ppaanngggg/layoutreader')
+        logger.warning(
+            f"'layoutreader-model-dir' not exists, use {layoutreader_at_modelscope_dir_path} as default")
         return layoutreader_at_modelscope_dir_path
     else:
         return layoutreader_model_dir
@@ -81,7 +84,8 @@ def get_device():
     config = read_config()
     device = config.get('device-mode')
     if device is None:
-        logger.warning(f"'device-mode' not found in {CONFIG_FILE_NAME}, use 'cpu' as default")
+        logger.warning(
+            f"'device-mode' not found in {CONFIG_FILE_NAME}, use 'cpu' as default")
         return 'cpu'
     else:
         return device
@@ -91,7 +95,8 @@ def get_table_recog_config():
     config = read_config()
     table_config = config.get('table-config')
     if table_config is None:
-        logger.warning(f"'table-config' not found in {CONFIG_FILE_NAME}, use 'False' as default")
+        logger.warning(
+            f"'table-config' not found in {CONFIG_FILE_NAME}, use 'False' as default")
         return json.loads(f'{{"model": "{MODEL_NAME.RAPID_TABLE}","enable": false, "max_time": 400}}')
     else:
         return table_config
@@ -101,7 +106,8 @@ def get_layout_config():
     config = read_config()
     layout_config = config.get('layout-config')
     if layout_config is None:
-        logger.warning(f"'layout-config' not found in {CONFIG_FILE_NAME}, use '{MODEL_NAME.LAYOUTLMv3}' as default")
+        logger.warning(
+            f"'layout-config' not found in {CONFIG_FILE_NAME}, use '{MODEL_NAME.LAYOUTLMv3}' as default")
         return json.loads(f'{{"model": "{MODEL_NAME.LAYOUTLMv3}"}}')
     else:
         return layout_config
@@ -111,7 +117,8 @@ def get_formula_config():
     config = read_config()
     formula_config = config.get('formula-config')
     if formula_config is None:
-        logger.warning(f"'formula-config' not found in {CONFIG_FILE_NAME}, use 'True' as default")
+        logger.warning(
+            f"'formula-config' not found in {CONFIG_FILE_NAME}, use 'True' as default")
         return json.loads(f'{{"mfd_model": "{MODEL_NAME.YOLO_V8_MFD}","mfr_model": "{MODEL_NAME.UniMerNet_v2_Small}","enable": true}}')
     else:
         return formula_config

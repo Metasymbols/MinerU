@@ -2,9 +2,8 @@ import os
 from pathlib import Path
 
 import click
-from loguru import logger
-
 import magic_pdf.model as model_config
+from loguru import logger
 from magic_pdf.data.data_reader_writer import FileBasedDataReader
 from magic_pdf.libs.version import __version__
 from magic_pdf.tools.common import do_parse, parse_pdf_methods

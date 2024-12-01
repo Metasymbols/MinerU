@@ -1,14 +1,15 @@
 import time
 
 import fitz
+import magic_pdf.model as model_config
 import numpy as np
 from loguru import logger
-
 from magic_pdf.libs.clean_memory import clean_memory
-from magic_pdf.libs.config_reader import get_local_models_dir, get_device, get_table_recog_config, get_layout_config, \
-    get_formula_config
+from magic_pdf.libs.config_reader import (get_device, get_formula_config,
+                                          get_layout_config,
+                                          get_local_models_dir,
+                                          get_table_recog_config)
 from magic_pdf.model.model_list import MODEL
-import magic_pdf.model as model_config
 
 
 def dict_compare(d1, d2):

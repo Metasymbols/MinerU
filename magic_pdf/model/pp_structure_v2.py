@@ -5,7 +5,8 @@ from loguru import logger
 try:
     from paddleocr import PPStructure
 except ImportError:
-    logger.error('paddleocr not installed, please install by "pip install magic-pdf[lite]"')
+    logger.error(
+        'paddleocr not installed, please install by "pip install magic-pdf[lite]"')
     exit(1)
 
 
@@ -18,30 +19,33 @@ def region_to_bbox(region):
 
 
 class CustomPaddleModel:
-    def __init__(self,
-                 ocr: bool = False,
-                 show_log: bool = False,
-                 lang=None,
-                 det_db_box_thresh=0.3,
-                 use_dilation=True,
-                 det_db_unclip_ratio=1.8
+    def __init__(
+        self,
+        ocr: bool = False,
+        show_log: bool = False,
+        lang=None,
+        det_db_box_thresh=0.3,
+        use_dilation=True,
+        det_db_unclip_ratio=1.8
     ):
         if lang is not None:
-            self.model = PPStructure(table=False,
-                                     ocr=True,
-                                     show_log=show_log,
-                                     lang=lang,
-                                     det_db_box_thresh=det_db_box_thresh,
-                                     use_dilation=use_dilation,
-                                     det_db_unclip_ratio=det_db_unclip_ratio,
+            self.model = PPStructure(
+                table=False,
+                ocr=True,
+                show_log=show_log,
+                lang=lang,
+                det_db_box_thresh=det_db_box_thresh,
+                use_dilation=use_dilation,
+                det_db_unclip_ratio=det_db_unclip_ratio,
             )
         else:
-            self.model = PPStructure(table=False,
-                                     ocr=True,
-                                     show_log=show_log,
-                                     det_db_box_thresh=det_db_box_thresh,
-                                     use_dilation=use_dilation,
-                                     det_db_unclip_ratio=det_db_unclip_ratio,
+            self.model = PPStructure(
+                table=False,
+                ocr=True,
+                show_log=show_log,
+                det_db_box_thresh=det_db_box_thresh,
+                use_dilation=use_dilation,
+                det_db_unclip_ratio=det_db_unclip_ratio,
             )
 
     def __call__(self, img):
@@ -57,7 +61,7 @@ class CustomPaddleModel:
         for line in result:
             line.pop("img")
             """
-            为paddle输出适配type no.    
+            为paddle输出适配type:no.
             title: 0 # 标题
             text: 1 # 文本
             header: 2 # abandon

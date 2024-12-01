@@ -1,23 +1,19 @@
 
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
-    get_adjusted_mfdetrec_res, get_ocr_result_list)
-from magic_pdf.model.sub_modules.model_utils import (
-    clean_vram, crop_img, get_res_list_from_layout_res)
-from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
-from magic_pdf.model.model_list import AtomicModel
-from magic_pdf.config.constants import (
-    MODEL_NAME,
-    TABLE_MAX_TIME_VALUE
-)
 import os
 import time
-
 
 import cv2
 import numpy as np
 import torch
 import yaml
 from loguru import logger
+from magic_pdf.config.constants import MODEL_NAME, TABLE_MAX_TIME_VALUE
+from magic_pdf.model.model_list import AtomicModel
+from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
+from magic_pdf.model.sub_modules.model_utils import (
+    clean_vram, crop_img, get_res_list_from_layout_res)
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
+    get_adjusted_mfdetrec_res, get_ocr_result_list)
 from PIL import Image
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新

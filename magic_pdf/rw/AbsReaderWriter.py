@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 class AbsReaderWriter(ABC):
     MODE_TXT = "text"
     MODE_BIN = "binary"
+
     @abstractmethod
     def read(self, path: str, mode=MODE_TXT):
         raise NotImplementedError

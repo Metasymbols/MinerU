@@ -1,5 +1,4 @@
 from loguru import logger
-
 from magic_pdf.config.ocr_content_type import ContentType
 from magic_pdf.libs.commons import join_path
 from magic_pdf.libs.pdf_image_tools import cut_image

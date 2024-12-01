@@ -1,21 +1,7 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
-'''
-@File    :   model_init2.py
-@Time    :   2024/11/28 13:10:19
-@Author  :   若水紫风 
-@Contact :   XXXXXXXXX@qq.com
-@License :   木兰公共协议 MulanPubL-2.0 版
-@Version :   1.0
-'''
-'''
-
-'''
 
 from functools import lru_cache
 from typing import Dict, Optional
 
-# here put the import lib
 from loguru import logger
 from magic_pdf.libs.Constants import MODEL_NAME
 from magic_pdf.model.model_list import AtomicModel
@@ -93,7 +79,7 @@ class Layoutlmv3_PredictorWrapper(BaseModel):
 
 
 class DocLayoutYOLOModelWrapper(BaseModel):
-    def __init__(self, weight:str, device='cpu'):
+    def __init__(self, weight: str, device='cpu'):
         if not weight:
             raise ValueError("weight cannot be empty")
         self.model = DocLayoutYOLOModel(weight, device)
@@ -103,11 +89,11 @@ class DocLayoutYOLOModelWrapper(BaseModel):
 
 
 class ModifiedPaddleOCRWrapper(BaseModel):
-    def __init__(self, 
-                 show_log=False, 
-                 det_db_box_thresh=0.3, 
-                 lang=None, 
-                 use_dilation=True, 
+    def __init__(self,
+                 show_log=False,
+                 det_db_box_thresh=0.3,
+                 lang=None,
+                 use_dilation=True,
                  det_db_unclip_ratio=1.8):
         if lang is not None and lang != '':
             self.model = ModifiedPaddleOCR(
@@ -151,7 +137,7 @@ class ModelFactory:
 
     @staticmethod
     def _create_layout_model(**kwargs):
-        
+
         layout_model_name = kwargs.get("layout_model_name")
         if layout_model_name == MODEL_NAME.LAYOUTLMv3:
             return Layoutlmv3_PredictorWrapper(
@@ -163,19 +149,19 @@ class ModelFactory:
             return DocLayoutYOLOModelWrapper(
                 kwargs.get("doclayout_yolo_weights"),
                 kwargs.get("device")
-                    )
+            )
 
     @staticmethod
     def _create_mfd_model(**kwargs):
         return YOLOv8MFDModelWrapper(
-            kwargs.get("mfd_weights"), 
+            kwargs.get("mfd_weights"),
             kwargs.get("device"))
 
     @staticmethod
     def _create_mfr_model(**kwargs):
         return UnimernetModelWrapper(
-            kwargs.get("mfr_weight_dir"), 
-            kwargs.get("mfr_cfg_path"), 
+            kwargs.get("mfr_weight_dir"),
+            kwargs.get("mfr_cfg_path"),
             kwargs.get("device"))
 
     @staticmethod
@@ -196,7 +182,8 @@ class ModelFactory:
         device = kwargs.get("device", "cpu")
 
         if table_model_type == MODEL_NAME.STRUCT_EQTABLE:
-            table_model = StructTableModelWrapper(model_path, max_new_tokens=2048, max_time=max_time)
+            table_model = StructTableModelWrapper(
+                model_path, max_new_tokens=2048, max_time=max_time)
         elif table_model_type == MODEL_NAME.TABLE_MASTER:
             table_model = TableMasterPaddleModelWrapper({
                 'model_dir': model_path,
@@ -206,11 +193,8 @@ class ModelFactory:
             table_model = RapidTableModelWrapper()
         else:
             logger.error('table model type not allowed')
-            
 
         return table_model
-
-    
 
 
 # 缓存优化：使用 lru_cache 来缓存模型实例，减少重复计算
@@ -232,7 +216,7 @@ class AtomModelSingleton:
     def get_atom_model(self, atom_model_name: str, **kwargs) -> BaseModel:
         lang = kwargs.get("lang", None)
         layout_model_name = kwargs.get("layout_model_name", None)
-       
+
         model_key = (atom_model_name, layout_model_name, lang)
 
         if model_key not in self._models:
@@ -252,13 +236,13 @@ if __name__ == "__main__":
 
     # 模拟获取不同的模型
     layout_model = singleton.get_atom_model(
-        atom_model_name= AtomicModel.Layout,
+        atom_model_name=AtomicModel.Layout,
         layout_model_name=MODEL_NAME.LAYOUTLMv3,
         layout_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\Layout\LayoutLMv3\model_final.pth",
         layout_config_file=r"G:\Workspace\code\py_code\MinerU\magic_pdf\resources\model_config\layoutlmv3\layoutlmv3_base_inference.yaml",
         device="cpu")
     print(layout_model.predict(image))
-    
+
     # ##############
     # layout_model = singleton.get_atom_model(
     #     atom_model_name= AtomicModel.Layout,
@@ -266,53 +250,51 @@ if __name__ == "__main__":
     #     doclayout_yolo_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\Layout\YOLO\doclayout_yolo_ft.pt",
     #     device="cpu")
     # print(layout_model.predict(image))
-    
+
     # #######################
     # mfd_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.MFD, 
-    #     mfd_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFD\YOLO\yolo_v8_ft.pt", 
+    #     atom_model_name=AtomicModel.MFD,
+    #     mfd_weights=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFD\YOLO\yolo_v8_ft.pt",
     #     device="cpu")
     # print(mfd_model.predict(image))
-    
+
     # # ##############
     # mfr_res = mfd_model.predict(image)
     # mfr_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.MFR, 
-    #     mfr_weight_dir=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFR\unimernet_small", 
+    #     atom_model_name=AtomicModel.MFR,
+    #     mfr_weight_dir=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\MFR\unimernet_small",
     #     mfr_cfg_path=r"G:\Workspace\code\py_code\MinerU\magic_pdf\resources\model_config\UniMERNet\demo.yaml",
     #     device="cpu")
     # print(mfr_model.predict(mfr_res,image))
-    
+
     # #################
     # # cn 中文 en 英文
     # ocr_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.OCR, 
+    #     atom_model_name=AtomicModel.OCR,
     #     lang="en"
     #     )
     # print(ocr_model.predict(image))
-    
+
     # #################
     # # struct_eqtable 必须有CUDA才可以调用
     # table_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.Table, 
+    #     atom_model_name=AtomicModel.Table,
     #     table_model_name=MODEL_NAME.STRUCT_EQTABLE,
     #     table_model_path=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\TabRec\StructEqTable"
     #     )
     # print(table_model.predict(image))
-    
+
     # ###############
     # table_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.Table, 
+    #     atom_model_name=AtomicModel.Table,
     #     table_model_name=MODEL_NAME.TABLE_MASTER,
     #     table_model_path=r"D:\ProgramData\.cache\hub\opendatalab\PDF-Extract-Kit-1___0\models\TabRec\TableMaster"
     #     )
     # print(table_model.predict(image))
-    
+
     # ###########################
     # table_model = singleton.get_atom_model(
-    #     atom_model_name=AtomicModel.Table, 
+    #     atom_model_name=AtomicModel.Table,
     #     table_model_name=MODEL_NAME.RAPID_TABLE,
     #     )
     # print(table_model.predict(image))
-    
-    

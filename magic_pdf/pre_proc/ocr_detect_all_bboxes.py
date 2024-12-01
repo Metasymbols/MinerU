@@ -1,11 +1,8 @@
 from magic_pdf.config.ocr_content_type import BlockType
 from magic_pdf.libs.boxbase import (
-    calculate_iou,
-    calculate_overlap_area_in_bbox1_area_ratio,
+    calculate_iou, calculate_overlap_area_in_bbox1_area_ratio,
     calculate_vertical_projection_overlap_ratio,
-    get_minbox_if_overlap_by_ratio
-)
-from magic_pdf.pre_proc.remove_bbox_overlap import remove_overlap_between_bbox_for_block
+    get_minbox_if_overlap_by_ratio)
 
 
 def add_bboxes(blocks, block_type, bboxes):
@@ -81,7 +78,8 @@ def ocr_prepare_bboxes_for_layout_split_v2(
     add_bboxes(table_footnote_blocks, BlockType.TableFootnote, all_bboxes)
     add_bboxes(text_blocks, BlockType.Text, all_bboxes)
     add_bboxes(title_blocks, BlockType.Title, all_bboxes)
-    add_bboxes(interline_equation_blocks, BlockType.InterlineEquation, all_bboxes)
+    add_bboxes(interline_equation_blocks,
+               BlockType.InterlineEquation, all_bboxes)
 
     """block嵌套问题解决"""
     """文本框与标题框重叠，优先信任文本框"""
@@ -91,7 +89,8 @@ def ocr_prepare_bboxes_for_layout_split_v2(
 
     # interline_equation 与title或text框冲突的情况，分两种情况处理
     """interline_equation框与文本类型框iou比较接近1的时候，信任行间公式框"""
-    all_bboxes = fix_interline_equation_overlap_text_blocks_with_hi_iou(all_bboxes)
+    all_bboxes = fix_interline_equation_overlap_text_blocks_with_hi_iou(
+        all_bboxes)
     """interline_equation框被包含在文本类型框内，且interline_equation比文本区块小很多时信任文本框，这时需要舍弃公式框"""
     # 通过后续大框套小框逻辑删除
 
@@ -107,7 +106,8 @@ def ocr_prepare_bboxes_for_layout_split_v2(
             footnote_blocks.append([x0, y0, x1, y1])
 
     """移除在footnote下面的任何框"""
-    need_remove_blocks = find_blocks_under_footnote(all_bboxes, footnote_blocks)
+    need_remove_blocks = find_blocks_under_footnote(
+        all_bboxes, footnote_blocks)
     if len(need_remove_blocks) > 0:
         for block in need_remove_blocks:
             all_bboxes.remove(block)
@@ -118,7 +118,7 @@ def ocr_prepare_bboxes_for_layout_split_v2(
     all_discarded_blocks = remove_overlaps_min_blocks(all_discarded_blocks)
     """将剩余的bbox做分离处理，防止后面分layout时出错"""
     # all_bboxes, drop_reasons = remove_overlap_between_bbox_for_block(all_bboxes)
-    all_bboxes.sort(key=lambda x: x[0]+x[1])
+    all_bboxes.sort(key=lambda x: x[0] + x[1])
     return all_bboxes, all_discarded_blocks
 
 
@@ -233,7 +233,8 @@ def remove_overlaps_min_blocks(all_bboxes):
                 )
                 if overlap_box is not None:
                     block_to_remove = next(
-                        (block for block in all_bboxes if block[:4] == overlap_box),
+                        (block for block in all_bboxes if block[:4]
+                         == overlap_box),
                         None,
                     )
                     if (

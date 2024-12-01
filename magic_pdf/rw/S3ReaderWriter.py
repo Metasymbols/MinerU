@@ -1,8 +1,8 @@
-from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
-from magic_pdf.libs.commons import parse_bucket_key, join_path
 import boto3
-from loguru import logger
 from botocore.config import Config
+from loguru import logger
+from magic_pdf.libs.commons import join_path, parse_bucket_key
+from magic_pdf.rw.AbsReaderWriter import AbsReaderWriter
 
 
 class S3ReaderWriter(AbsReaderWriter):
@@ -71,7 +71,8 @@ class S3ReaderWriter(AbsReaderWriter):
         range_header = (
             f"bytes={offset}-{offset+limit-1}" if limit else f"bytes={offset}-"
         )
-        res = self.client.get_object(Bucket=bucket_name, Key=key, Range=range_header)
+        res = self.client.get_object(
+            Bucket=bucket_name, Key=key, Range=range_header)
         return res["Body"].read()
 
 
@@ -121,8 +122,8 @@ if __name__ == "__main__":
         )
         logger.info(f"Read binary data from S3: {binary_data_read}")
     if 1:
-        import os
         import json
+        import os
 
         ak = os.getenv("AK", "")
         sk = os.getenv("SK", "")
@@ -137,6 +138,7 @@ if __name__ == "__main__":
         assert content_bin[:10] == b'{"track_id'
         assert content_bin[-10:] == b'r":null}}\n'
 
-        content_bin = s3_reader_writer.read_offset(key_basename, offset=424, limit=426)
+        content_bin = s3_reader_writer.read_offset(
+            key_basename, offset=424, limit=426)
         jso = json.dumps(content_bin.decode("utf-8"))
         print(jso)

@@ -1,7 +1,6 @@
 import torch
-from struct_eqtable import build_model
-
 from magic_pdf.model.sub_modules.table.table_utils import minify_html
+from struct_eqtable import build_model
 
 
 class StructTableModel:
@@ -24,7 +23,8 @@ class StructTableModel:
             output_format = self.default_format
         else:
             if output_format not in ['latex', 'markdown', 'html']:
-                raise ValueError(f"Output format {output_format} is not supported.")
+                raise ValueError(
+                    f"Output format {output_format} is not supported.")
 
         results = self.model(
             images, output_format=output_format
@@ -34,4 +34,3 @@ class StructTableModel:
             results = [minify_html(html) for html in results]
 
         return results
-
