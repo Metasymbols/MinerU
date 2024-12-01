@@ -1,4 +1,14 @@
-# flake8: noqa
+
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
+    get_adjusted_mfdetrec_res, get_ocr_result_list)
+from magic_pdf.model.sub_modules.model_utils import (
+    clean_vram, crop_img, get_res_list_from_layout_res)
+from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
+from magic_pdf.model.model_list import AtomicModel
+from magic_pdf.config.constants import (
+    MODEL_NAME,
+    TABLE_MAX_TIME_VALUE
+)
 import os
 import time
 
@@ -6,10 +16,7 @@ import time
 import cv2
 import numpy as np
 import torch
-import numpy as np
-import torch
 import yaml
-from loguru import logger
 from loguru import logger
 from PIL import Image
 
@@ -23,19 +30,6 @@ try:
         torchtext.disable_torchtext_deprecation_warning()
 except ImportError:
     pass
-
-from magic_pdf.config.constants import *
-from magic_pdf.config.constants import *
-from magic_pdf.model.model_list import AtomicModel
-from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
-from magic_pdf.model.sub_modules.model_utils import (
-    clean_vram, crop_img, get_res_list_from_layout_res)
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
-    get_adjusted_mfdetrec_res, get_ocr_result_list)
-from magic_pdf.model.sub_modules.model_utils import (
-    clean_vram, crop_img, get_res_list_from_layout_res)
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
-    get_adjusted_mfdetrec_res, get_ocr_result_list)
 
 
 class CustomPEKModel:
@@ -54,7 +48,7 @@ class CustomPEKModel:
         model_config_dir = os.path.join(root_dir, 'resources', 'model_config')
         # 构建 model_configs.yaml 文件的完整路径
         config_path = os.path.join(model_config_dir, 'model_configs.yaml')
-        
+
         with open(config_path, 'r', encoding='utf-8') as f:
             self.configs = yaml.load(f, Loader=yaml.FullLoader)
         # 初始化解析配置
@@ -82,8 +76,10 @@ class CustomPEKModel:
         # table config
         self.table_config = kwargs.get('table_config')
         self.apply_table = self.table_config.get('enable', False)
-        self.table_max_time = self.table_config.get('max_time', TABLE_MAX_TIME_VALUE)
-        self.table_model_name = self.table_config.get('model', MODEL_NAME.RAPID_TABLE)
+        self.table_max_time = self.table_config.get(
+            'max_time', TABLE_MAX_TIME_VALUE)
+        self.table_model_name = self.table_config.get(
+            'model', MODEL_NAME.RAPID_TABLE)
 
         # ocr config
         self.apply_ocr = ocr
@@ -103,7 +99,8 @@ class CustomPEKModel:
         # 初始化解析方案
         self.device = kwargs.get("device", "cpu")
         logger.info("using device: {}".format(self.device))
-        models_dir = kwargs.get("models_dir", os.path.join(root_dir, "resources", "models"))
+        models_dir = kwargs.get("models_dir", os.path.join(
+            root_dir, "resources", "models"))
         logger.info("using models_dir: {}".format(models_dir))
 
         atom_model_manager = AtomModelSingleton()
@@ -123,9 +120,11 @@ class CustomPEKModel:
 
             # 初始化公式解析模型
             mfr_weight_dir = str(
-                os.path.join(models_dir, self.configs['weights'][self.mfr_model_name])
+                os.path.join(
+                    models_dir, self.configs['weights'][self.mfr_model_name])
             )
-            mfr_cfg_path = str(os.path.join(model_config_dir, 'UniMERNet', 'demo.yaml'))
+            mfr_cfg_path = str(os.path.join(
+                model_config_dir, 'UniMERNet', 'demo.yaml'))
             self.mfr_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.MFR,
                 mfr_weight_dir=mfr_weight_dir,
@@ -174,7 +173,8 @@ class CustomPEKModel:
             self.table_model = atom_model_manager.get_atom_model(
                 atom_model_name=AtomicModel.Table,
                 table_model_name=self.table_model_name,
-                table_model_path=str(os.path.join(models_dir, table_model_dir)),
+                table_model_path=str(os.path.join(
+                    models_dir, table_model_dir)),
                 table_max_time=self.table_max_time,
                 device=self.device,
             )
@@ -208,7 +208,8 @@ class CustomPEKModel:
             formula_list = self.mfr_model.predict(mfd_res, image)
             layout_res.extend(formula_list)
             mfr_cost = round(time.time() - mfr_start, 2)
-            logger.info(f'formula nums: {len(formula_list)}, mfr time: {mfr_cost}')
+            logger.info(
+                f'formula nums: {len(formula_list)}, mfr time: {mfr_cost}')
 
         # 清理显存
         clean_vram(self.device, vram_threshold=8)
@@ -222,12 +223,15 @@ class CustomPEKModel:
         ocr_start = time.time()
         # Process each area that requires OCR processing
         for res in ocr_res_list:
-            new_image, useful_list = crop_img(res, pil_img, crop_paste_x=50, crop_paste_y=50)
-            adjusted_mfdetrec_res = get_adjusted_mfdetrec_res(single_page_mfdetrec_res, useful_list)
+            new_image, useful_list = crop_img(
+                res, pil_img, crop_paste_x=50, crop_paste_y=50)
+            adjusted_mfdetrec_res = get_adjusted_mfdetrec_res(
+                single_page_mfdetrec_res, useful_list)
 
             # OCR recognition
             new_image = cv2.cvtColor(np.asarray(new_image), cv2.COLOR_RGB2BGR)
-            ocr_res = self.ocr_model.ocr(new_image, mfd_res=adjusted_mfdetrec_res)[0]
+            ocr_res = self.ocr_model.ocr(
+                new_image, mfd_res=adjusted_mfdetrec_res)[0]
 
             # Integration results
             if ocr_res:
@@ -249,7 +253,8 @@ class CustomPEKModel:
                 html_code = None
                 if self.table_model_name == MODEL_NAME.STRUCT_EQTABLE:
                     with torch.no_grad():
-                        table_result = self.table_model.predict(new_image, 'html')
+                        table_result = self.table_model.predict(
+                            new_image, 'html')
                         if len(table_result) > 0:
                             html_code = table_result[0]
                 elif self.table_model_name == MODEL_NAME.TABLE_MASTER:

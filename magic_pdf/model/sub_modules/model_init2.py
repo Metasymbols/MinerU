@@ -210,11 +210,7 @@ class ModelFactory:
 
         return table_model
 
-    # @staticmethod
-    # def _create_doclayout_yolo_model(**kwargs):
-    #     return DocLayoutYOLOModelWrapper(
-    #         kwargs.get("doclayout_yolo_weights"), 
-    #         kwargs.get("device"))
+    
 
 
 # 缓存优化：使用 lru_cache 来缓存模型实例，减少重复计算

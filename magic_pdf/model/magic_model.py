@@ -170,7 +170,8 @@ class MagicModel:
                     if pos_flag_count > 1:
                         continue
                     dis_figure_footnote[i] = min(
-                        self._bbox_distance(figures[j]['bbox'], footnotes[i]['bbox']),
+                        self._bbox_distance(
+                            figures[j]['bbox'], footnotes[i]['bbox']),
                         dis_figure_footnote.get(i, float('inf')),
                     )
             for i in range(len(footnotes)):
@@ -189,7 +190,8 @@ class MagicModel:
                         continue
 
                     dis_table_footnote[i] = min(
-                        self._bbox_distance(tables[j]['bbox'], footnotes[i]['bbox']),
+                        self._bbox_distance(
+                            tables[j]['bbox'], footnotes[i]['bbox']),
                         dis_table_footnote.get(i, float('inf')),
                     )
             for i in range(len(footnotes)):
@@ -728,7 +730,8 @@ class MagicModel:
                 ):
 
                     if priority_pos == PosRelationEnum.BOTTOM:
-                        sub_obj_map_h[dis_by_directions['bottom'][i][0]].append(i)
+                        sub_obj_map_h[dis_by_directions['bottom']
+                                      [i][0]].append(i)
                     else:
                         sub_obj_map_h[dis_by_directions['top'][i][0]].append(i)
                     continue
@@ -750,8 +753,10 @@ class MagicModel:
                             'bbox'
                         ]
 
-                        left_sub_bbox_y_axis = left_sub_bbox[3] - left_sub_bbox[1]
-                        right_sub_bbox_y_axis = right_sub_bbox[3] - right_sub_bbox[1]
+                        left_sub_bbox_y_axis = left_sub_bbox[3] - \
+                            left_sub_bbox[1]
+                        right_sub_bbox_y_axis = right_sub_bbox[3] - \
+                            right_sub_bbox[1]
 
                         if (
                             abs(left_sub_bbox_y_axis - l_y_axis)
@@ -783,8 +788,10 @@ class MagicModel:
                         dis_by_directions['top'][i][1]
                         - dis_by_directions['bottom'][i][1]
                     ):
-                        top_bottom = subjects[dis_by_directions['bottom'][i][0]]['bbox']
-                        bottom_top = subjects[dis_by_directions['top'][i][0]]['bbox']
+                        top_bottom = subjects[dis_by_directions['bottom']
+                                              [i][0]]['bbox']
+                        bottom_top = subjects[dis_by_directions['top']
+                                              [i][0]]['bbox']
 
                         top_bottom_x_axis = top_bottom[2] - top_bottom[0]
                         bottom_top_x_axis = bottom_top[2] - bottom_top[0]
@@ -819,7 +826,8 @@ class MagicModel:
                         x_axis_bbox = subjects[top_or_bottom[0]]['bbox']
 
                         if (
-                            abs((x_axis_bbox[2] - x_axis_bbox[0]) - l_x_axis) / l_x_axis
+                            abs((x_axis_bbox[2] - x_axis_bbox[0]
+                                 ) - l_x_axis) / l_x_axis
                             > abs((y_axis_bbox[3] - y_axis_bbox[1]) - l_y_axis)
                             / l_y_axis
                         ):
@@ -845,7 +853,8 @@ class MagicModel:
                         'score': subjects[i]['score'],
                     },
                     'obj_bboxes': [
-                        {'score': objects[j]['score'], 'bbox': objects[j]['bbox']}
+                        {'score': objects[j]['score'],
+                            'bbox': objects[j]['bbox']}
                         for j in sub_obj_map_h[i]
                     ],
                     'sub_idx': i,
@@ -867,7 +876,8 @@ class MagicModel:
                 'image_caption_list': v['obj_bboxes'],
             }
             filter_idx = v['sub_idx']
-            d = next(filter(lambda x: x['sub_idx'] == filter_idx, with_footnotes))
+            d = next(filter(lambda x: x['sub_idx']
+                     == filter_idx, with_footnotes))
             record['image_footnote_list'] = d['obj_bboxes']
             ret.append(record)
         return ret
@@ -886,7 +896,8 @@ class MagicModel:
                 'table_caption_list': v['obj_bboxes'],
             }
             filter_idx = v['sub_idx']
-            d = next(filter(lambda x: x['sub_idx'] == filter_idx, with_footnotes))
+            d = next(filter(lambda x: x['sub_idx']
+                     == filter_idx, with_footnotes))
             record['table_footnote_list'] = d['obj_bboxes']
             ret.append(record)
         return ret
@@ -1060,4 +1071,3 @@ class MagicModel:
 
     def get_model_list(self, page_no):
         return self.__model_list[page_no]
-
