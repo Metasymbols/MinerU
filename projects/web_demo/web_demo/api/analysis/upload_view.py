@@ -48,18 +48,20 @@ class UploadPdfView(Resource):
             pdf_url = params.get('pdfUrl')
             try:
                 response = requests.get(pdf_url, stream=True)
-            except ConnectionError as e:
+            except ConnectionError:
                 logger.error(traceback.format_exc())
                 return generate_response(code=400, msg="params is not valid", msgZh="参数错误，pdf链接无法访问")
             if response.status_code != 200:
                 return generate_response(code=400, msg="params is not valid", msgZh="参数错误，pdf链接响应状态异常")
             # 创建一个模拟的 FileStorage 对象
             file_content = BytesIO(response.content)
-            filename = Path(pdf_url).name if ".pdf" in pdf_url else f"{Path(pdf_url).name}.pdf"
+            filename = Path(pdf_url).name if ".pdf" in pdf_url else f"{
+                Path(pdf_url).name}.pdf"
             file = FileStorage(
                 stream=file_content,
                 filename=filename,
-                content_type=response.headers.get('Content-Type', 'application/octet-stream')
+                content_type=response.headers.get(
+                    'Content-Type', 'application/octet-stream')
             )
             if not file or file and not url_is_pdf(file):
                 return generate_response(code=400, msg="Invalid PDF file", msgZH="PDF文件参数无效")
@@ -81,7 +83,8 @@ class UploadPdfView(Resource):
                 f.write(chunk)
 
         # 生成文件的URL路径
-        file_url = url_for('analysis.uploadpdfview', filename=new_filename, as_attachment=False)
+        file_url = url_for('analysis.uploadpdfview',
+                           filename=new_filename, as_attachment=False)
         data = {
             "url": file_url,
             "file_key": file_key
