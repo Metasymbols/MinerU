@@ -1,13 +1,15 @@
 import os
-from .extentions import app, db, migrate, jwt, ma
-from common.web_hook import before_request
+
 from common.logger import setup_log
+from common.web_hook import before_request
+
+from api.extensions import app, db, jwt, ma, migrate
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _register_db(flask_app):
-    from common import import_models
+
     db.init_app(flask_app)
     with app.app_context():
         db.create_all()
