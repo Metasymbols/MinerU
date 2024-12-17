@@ -32,8 +32,12 @@ def parse_pdf(doc_path, output_dir, end_page_id, is_ocr, layout_mode, formula_en
         if is_ocr:
             parse_method = 'ocr'
         else:
-            parse_method = 'auto'
-        local_image_dir, local_md_dir = prepare_env(output_dir, file_name, parse_method)
+            parse_method = "auto"
+        local_image_dir, local_md_dir = prepare_env(
+            output_dir, file_name, parse_method)
+
+
+>>>>>> > 52ef1bc782ddf8fac0fae519fd61425eea3e5786
         do_parse(
             output_dir,
             file_name,
@@ -100,8 +104,9 @@ def to_markdown(file_path, end_pages, is_ocr, layout_mode, formula_enable, table
     # 获取识别的md文件以及压缩包文件路径
     local_md_dir, file_name = parse_pdf(file_path, './output', end_pages - 1, is_ocr,
                                         layout_mode, formula_enable, table_enable, language)
-    archive_zip_path = os.path.join('./output', compute_sha256(local_md_dir) + '.zip')
+    archive_zip_path = os.path.join("./output", compute_sha256(local_md_dir) + ".zip")
     zip_archive_success = compress_directory_to_zip(local_md_dir, archive_zip_path)
+>>>>>>> 52ef1bc782ddf8fac0fae519fd61425eea3e5786
     if zip_archive_success == 0:
         logger.info('压缩成功')
     else:
@@ -138,7 +143,7 @@ model_init = init_model()
 logger.info(f'model_init: {model_init}')
 
 
-with open('header.html', 'r') as file:
+with open("header.html", "r") as file:
     header = file.read()
 
 
@@ -159,8 +164,9 @@ devanagari_lang = [
 ]
 other_lang = ['ch', 'en', 'korean', 'japan', 'chinese_cht', 'ta', 'te', 'ka']
 
-all_lang = ['']
+all_lang = [""]
 all_lang.extend([*other_lang, *latin_lang, *arabic_lang, *cyrillic_lang, *devanagari_lang])
+>>>>>>> 52ef1bc782ddf8fac0fae519fd61425eea3e5786
 
 
 def to_pdf(file_path):
@@ -188,21 +194,21 @@ if __name__ == '__main__':
         gr.HTML(header)
         with gr.Row():
             with gr.Column(variant='panel', scale=5):
-                file = gr.File(label='Please upload a PDF or image', file_types=['.pdf', '.png', '.jpeg', '.jpg'])
-                max_pages = gr.Slider(1, 10, 5, step=1, label='Max convert pages')
+                file = gr.File(label="Please upload a PDF or image", file_types=[".pdf", ".png", ".jpeg", ".jpg"])
+                max_pages = gr.Slider(1, 10, 5, step=1, label="Max convert pages")
                 with gr.Row():
-                    layout_mode = gr.Dropdown(['layoutlmv3', 'doclayout_yolo'], label='Layout model', value='layoutlmv3')
-                    language = gr.Dropdown(all_lang, label='Language', value='')
+                    layout_mode = gr.Dropdown(["layoutlmv3", "doclayout_yolo"], label="Layout model", value="layoutlmv3")
+                    language = gr.Dropdown(all_lang, label="Language", value="")
                 with gr.Row():
-                    formula_enable = gr.Checkbox(label='Enable formula recognition', value=True)
-                    is_ocr = gr.Checkbox(label='Force enable OCR', value=False)
-                    table_enable = gr.Checkbox(label='Enable table recognition(test)', value=False)
+                    formula_enable = gr.Checkbox(label="Enable formula recognition", value=True)
+                    is_ocr = gr.Checkbox(label="Force enable OCR", value=False)
+                    table_enable = gr.Checkbox(label="Enable table recognition(test)", value=False)
                 with gr.Row():
-                    change_bu = gr.Button('Convert')
-                    clear_bu = gr.ClearButton(value='Clear')
-                pdf_show = PDF(label='PDF preview', interactive=True, height=800)
-                with gr.Accordion('Examples:'):
-                    example_root = os.path.join(os.path.dirname(__file__), 'examples')
+                    change_bu = gr.Button("Convert")
+                    clear_bu = gr.ClearButton(value="Clear")
+                pdf_show = PDF(label="PDF preview", interactive=True, height=800)
+                with gr.Accordion("Examples:"):
+                    example_root = os.path.join(os.path.dirname(__file__), "examples")
                     gr.Examples(
                         examples=[os.path.join(example_root, _) for _ in os.listdir(example_root) if
                                   _.endswith('pdf')],
@@ -210,7 +216,7 @@ if __name__ == '__main__':
                     )
 
             with gr.Column(variant='panel', scale=5):
-                output_file = gr.File(label='convert result', interactive=False)
+                output_file = gr.File(label="convert result", interactive=False)
                 with gr.Tabs():
                     with gr.Tab('Markdown rendering'):
                         md = gr.Markdown(label='Markdown rendering', height=900, show_copy_button=True,
@@ -223,3 +229,5 @@ if __name__ == '__main__':
         clear_bu.add([file, md, pdf_show, md_text, output_file, is_ocr, table_enable, language])
 
     demo.launch(server_name='0.0.0.0')
+
+    demo.launch(server_name="0.0.0.0")

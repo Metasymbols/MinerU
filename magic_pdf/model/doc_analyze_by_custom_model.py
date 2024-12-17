@@ -1,3 +1,12 @@
+from magic_pdf.model.operators import InferenceResult
+from magic_pdf.model.model_list import MODEL
+from magic_pdf.libs.config_reader import (get_device, get_formula_config,
+                                          get_layout_config,
+                                          get_local_models_dir,
+                                          get_table_recog_config)
+from magic_pdf.libs.clean_memory import clean_memory
+from magic_pdf.data.dataset import Dataset
+import magic_pdf.model as model_config
 import os
 import time
 
@@ -19,16 +28,6 @@ try:
         torchtext.disable_torchtext_deprecation_warning()
 except ImportError:
     pass
-
-import magic_pdf.model as model_config
-from magic_pdf.data.dataset import Dataset
-from magic_pdf.libs.clean_memory import clean_memory
-from magic_pdf.libs.config_reader import (get_device, get_formula_config,
-                                          get_layout_config,
-                                          get_local_models_dir,
-                                          get_table_recog_config)
-from magic_pdf.model.model_list import MODEL
-from magic_pdf.model.operators import InferenceResult
 
 
 def dict_compare(d1, d2):
@@ -142,7 +141,8 @@ def custom_model_init(
         if model == MODEL.Paddle:
             from magic_pdf.model.pp_structure_v2 import CustomPaddleModel
 
-            custom_model = CustomPaddleModel(ocr=ocr, show_log=show_log, lang=lang)
+            custom_model = CustomPaddleModel(
+                ocr=ocr, show_log=show_log, lang=lang)
         elif model == MODEL.PEK:
             from magic_pdf.model.pdf_extract_kit import CustomPEKModel
 
@@ -180,23 +180,16 @@ def custom_model_init(
         model_init_cost = time.time() - model_init_start
         logger.info(f'model init cost: {model_init_cost}')
     else:
-        logger.error('use_inside_model is False, not allow to use inside model')
+        logger.error(
+            'use_inside_model is False, not allow to use inside model')
         exit(1)
 
     return custom_model
 
 
-def doc_analyze(
-    dataset: Dataset,
-    ocr: bool = False,
-    show_log: bool = False,
-    start_page_id=0,
-    end_page_id=None,
-    lang=None,
-    layout_model=None,
-    formula_enable=None,
-    table_enable=None,
-) -> InferenceResult:
+def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
+                start_page_id=0, end_page_id=None, lang=None,
+                layout_model=None, formula_enable=None, table_enable=None):
 
     if lang == '':
         lang = None
@@ -221,11 +214,13 @@ def doc_analyze(
         if start_page_id <= index <= end_page_id:
             page_start = time.time()
             result = custom_model(img)
-            logger.info(f'-----page_id : {index}, page total time: {round(time.time() - page_start, 2)}-----')
+            logger.info(
+                f'-----page_id : {index}, page total time: {round(time.time() - page_start, 2)}-----')
         else:
             result = []
 
-        page_info = {'page_no': index, 'height': page_height, 'width': page_width}
+        page_info = {'page_no': index,
+                     'height': page_height, 'width': page_width}
         page_dict = {'layout_dets': result, 'page_info': page_info}
         model_json.append(page_dict)
 
@@ -235,7 +230,8 @@ def doc_analyze(
     logger.info(f'gc time: {gc_time}')
 
     doc_analyze_time = round(time.time() - doc_analyze_start, 2)
-    doc_analyze_speed = round((end_page_id + 1 - start_page_id) / doc_analyze_time, 2)
+    doc_analyze_speed = round(
+        (end_page_id + 1 - start_page_id) / doc_analyze_time, 2)
     logger.info(
         f'doc analyze time: {round(time.time() - doc_analyze_start, 2)},'
         f' speed: {doc_analyze_speed} pages/second'

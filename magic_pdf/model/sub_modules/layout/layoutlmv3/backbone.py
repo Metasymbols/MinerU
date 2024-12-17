@@ -11,14 +11,11 @@
 # CoaT: https://github.com/mlpc-ucsd/CoaT
 # --------------------------------------------------------------------------------
 
-
-import torch
-
 from detectron2.layers import (
     ShapeSpec,
 )
 from detectron2.modeling import Backbone, BACKBONE_REGISTRY, FPN
-from detectron2.modeling.backbone.fpn import LastLevelP6P7, LastLevelMaxPool
+from detectron2.modeling.backbone.fpn import LastLevelMaxPool
 
 from .beit import beit_base_patch16, dit_base_patch16, dit_large_patch16, beit_large_patch16
 from .deit import deit_base_patch16, mae_base_patch16
@@ -40,11 +37,15 @@ class VIT_Backbone(Backbone):
         super().__init__()
         self._out_features = out_features
         if 'base' in name:
-            self._out_feature_strides = {"layer3": 4, "layer5": 8, "layer7": 16, "layer11": 32}
-            self._out_feature_channels = {"layer3": 768, "layer5": 768, "layer7": 768, "layer11": 768}
+            self._out_feature_strides = {
+                "layer3": 4, "layer5": 8, "layer7": 16, "layer11": 32}
+            self._out_feature_channels = {
+                "layer3": 768, "layer5": 768, "layer7": 768, "layer11": 768}
         else:
-            self._out_feature_strides = {"layer7": 4, "layer11": 8, "layer15": 16, "layer23": 32}
-            self._out_feature_channels = {"layer7": 1024, "layer11": 1024, "layer15": 1024, "layer23": 1024}
+            self._out_feature_strides = {
+                "layer7": 4, "layer11": 8, "layer15": 16, "layer23": 32}
+            self._out_feature_channels = {
+                "layer7": 1024, "layer11": 1024, "layer15": 1024, "layer23": 1024}
 
         if name == 'beit_base_patch16':
             model_func = beit_base_patch16
@@ -86,7 +87,7 @@ class VIT_Backbone(Backbone):
             config.has_spatial_attention_bias = False
             config.has_relative_attention_bias = False
             self.backbone = LayoutLMv3Model(config, detection=True,
-                                               out_features=out_features, image_only=image_only)
+                                            out_features=out_features, image_only=image_only)
         else:
             self.backbone = model_func(img_size=img_size,
                                        out_features=out_features,
@@ -110,7 +111,7 @@ class VIT_Backbone(Backbone):
                 attention_mask=x["attention_mask"] if "attention_mask" in x else None,
                 # output_hidden_states=True,
             )
-        assert x.dim() == 4, f"VIT takes an input of shape (N, C, H, W). Got {x.shape} instead!"
+        assert x.dim() == 4, f"VIT takes an input of shape(N, C, H, W). Got {x.shape} instead!"
         return self.backbone.forward_features(x)
 
     def output_shape(self):

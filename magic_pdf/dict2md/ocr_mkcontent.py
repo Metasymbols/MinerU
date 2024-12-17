@@ -1,7 +1,6 @@
 import re
 
 from loguru import logger
-
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.config.ocr_content_type import BlockType, ContentType
 from magic_pdf.libs.commons import join_path
@@ -165,15 +164,15 @@ def merge_para_with_text(para_block):
             if content:
                 langs = ['zh', 'ja', 'ko']
                 # logger.info(f'block_lang: {block_lang}, content: {content}')
-                if block_lang in langs: # 中文/日语/韩文语境下，换行不需要空格分隔,但是如果是行内公式结尾，还是要加空格
-                    if j == len(line['spans']) - 1 and span_type not in [ContentType.InlineEquation]:
+                if block_lang in langs:  # 中文/日语/韩文语境下，换行不需要空格分隔
+                    if j == len(line['spans']) - 1:
                         para_text += content
                     else:
                         para_text += f'{content} '
                 else:
                     if span_type in [ContentType.Text, ContentType.InlineEquation]:
                         # 如果span是line的最后一个且末尾带有-连字符，那么末尾不应该加空格,同时应该把-删除
-                        if j == len(line['spans'])-1 and span_type == ContentType.Text and __is_hyphen_at_line_end(content):
+                        if j == len(line['spans']) - 1 and span_type == ContentType.Text and __is_hyphen_at_line_end(content):
                             para_text += content[:-1]
                         else:  # 西方文本语境下 content间需要空格分隔
                             para_text += f'{content} '
@@ -208,20 +207,24 @@ def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason
             'text_format': 'latex',
         }
     elif para_type == BlockType.Image:
-        para_content = {'type': 'image', 'img_path': '', 'img_caption': [], 'img_footnote': []}
+        para_content = {'type': 'image', 'img_path': '',
+                        'img_caption': [], 'img_footnote': []}
         for block in para_block['blocks']:
             if block['type'] == BlockType.ImageBody:
                 for line in block['lines']:
                     for span in line['spans']:
                         if span['type'] == ContentType.Image:
                             if span.get('image_path', ''):
-                                para_content['img_path'] = join_path(img_buket_path, span['image_path'])
+                                para_content['img_path'] = join_path(
+                                    img_buket_path, span['image_path'])
             if block['type'] == BlockType.ImageCaption:
                 para_content['img_caption'].append(merge_para_with_text(block))
             if block['type'] == BlockType.ImageFootnote:
-                para_content['img_footnote'].append(merge_para_with_text(block))
+                para_content['img_footnote'].append(
+                    merge_para_with_text(block))
     elif para_type == BlockType.Table:
-        para_content = {'type': 'table', 'img_path': '', 'table_caption': [], 'table_footnote': []}
+        para_content = {'type': 'table', 'img_path': '',
+                        'table_caption': [], 'table_footnote': []}
         for block in para_block['blocks']:
             if block['type'] == BlockType.TableBody:
                 for line in block['lines']:
@@ -234,12 +237,15 @@ def para_to_standard_format_v2(para_block, img_buket_path, page_idx, drop_reason
                                 para_content['table_body'] = f"\n\n{span['html']}\n\n"
 
                             if span.get('image_path', ''):
-                                para_content['img_path'] = join_path(img_buket_path, span['image_path'])
+                                para_content['img_path'] = join_path(
+                                    img_buket_path, span['image_path'])
 
             if block['type'] == BlockType.TableCaption:
-                para_content['table_caption'].append(merge_para_with_text(block))
+                para_content['table_caption'].append(
+                    merge_para_with_text(block))
             if block['type'] == BlockType.TableFootnote:
-                para_content['table_footnote'].append(merge_para_with_text(block))
+                para_content['table_footnote'].append(
+                    merge_para_with_text(block))
 
     para_content['page_idx'] = page_idx
 

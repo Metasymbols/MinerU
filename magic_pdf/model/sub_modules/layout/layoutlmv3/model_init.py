@@ -1,44 +1,32 @@
-from .visualizer import Visualizer
-from .rcnn_vl import *
-from .backbone import *
-
-from detectron2.config import get_cfg
 from detectron2.config import CfgNode as CN
-from detectron2.data import MetadataCatalog, DatasetCatalog
-from detectron2.data.datasets import register_coco_instances
-from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch, DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2.data import MetadataCatalog
+from detectron2.engine import DefaultPredictor, default_setup
+
+from .backbone import *
+from .rcnn_vl import *
+from .visualizer import Visualizer
 
 
 def add_vit_config(cfg):
     """
     Add config for VIT.
+
+    Args:
+        cfg: Configuration node to be modified.
     """
     _C = cfg
-
     _C.MODEL.VIT = CN()
-
-    # CoaT model name.
     _C.MODEL.VIT.NAME = ""
-
-    # Output features from CoaT backbone.
     _C.MODEL.VIT.OUT_FEATURES = ["layer3", "layer5", "layer7", "layer11"]
-
     _C.MODEL.VIT.IMG_SIZE = [224, 224]
-
     _C.MODEL.VIT.POS_TYPE = "shared_rel"
-
     _C.MODEL.VIT.DROP_PATH = 0.
-
     _C.MODEL.VIT.MODEL_KWARGS = "{}"
-
     _C.SOLVER.OPTIMIZER = "ADAMW"
-
     _C.SOLVER.BACKBONE_MULTIPLIER = 1.0
-
     _C.AUG = CN()
-
     _C.AUG.DETR = False
-
     _C.MODEL.IMAGE_ONLY = True
     _C.PUBLAYNET_DATA_DIR_TRAIN = ""
     _C.PUBLAYNET_DATA_DIR_TEST = ""
@@ -55,38 +43,32 @@ def add_vit_config(cfg):
     _C.DOCSTRUCTBENCHv2_DATA_DIR_TEST = ""
     _C.CACHE_DIR = ""
     _C.MODEL.CONFIG_PATH = ""
-
-    # effective update steps would be MAX_ITER/GRADIENT_ACCUMULATION_STEPS
-    # maybe need to set MAX_ITER *= GRADIENT_ACCUMULATION_STEPS
     _C.SOLVER.GRADIENT_ACCUMULATION_STEPS = 1
 
 
 def setup(args, device):
     """
     Create configs and perform basic setups.
+
+    Args:
+        args: Command line arguments.
+        device: Device to run the model on.
+
+    Returns:
+        cfg: Configured settings.
     """
     cfg = get_cfg()
-
-    # add_coat_config(cfg)
     add_vit_config(cfg)
-    cfg.merge_from_file(args.config_file)
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.2  # set threshold for this model
+    try:
+        cfg.merge_from_file(args.config_file)
+    except Exception as e:
+        print(f"Error loading config file: {e}")
+        raise
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.2
     cfg.merge_from_list(args.opts)
-
-    # 使用统一的device配置
     cfg.MODEL.DEVICE = device
-
     cfg.freeze()
     default_setup(cfg, args)
-
-    #@todo 可以删掉这块？
-    # register_coco_instances(
-    #     "scihub_train",
-    #     {},
-    #     cfg.SCIHUB_DATA_DIR_TRAIN + ".json",
-    #     cfg.SCIHUB_DATA_DIR_TRAIN
-    # )
-
     return cfg
 
 
@@ -132,8 +114,10 @@ class Layoutlmv3_Predictor(object):
         # }
         layout_dets = []
         outputs = self.predictor(image)
-        boxes = outputs["instances"].to("cpu")._fields["pred_boxes"].tensor.tolist()
-        labels = outputs["instances"].to("cpu")._fields["pred_classes"].tolist()
+        boxes = outputs["instances"].to(
+            "cpu")._fields["pred_boxes"].tensor.tolist()
+        labels = outputs["instances"].to(
+            "cpu")._fields["pred_classes"].tolist()
         scores = outputs["instances"].to("cpu")._fields["scores"].tolist()
         for bbox_idx in range(len(boxes)):
             if labels[bbox_idx] in ignore_catids:

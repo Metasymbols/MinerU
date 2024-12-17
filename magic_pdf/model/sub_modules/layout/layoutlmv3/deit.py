@@ -3,14 +3,13 @@ Mostly copy-paste from DINO and timm library:
 https://github.com/facebookresearch/dino
 https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
 """
-import warnings
-
 import math
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import trunc_normal_, drop_path, to_2tuple
 from functools import partial
+
 
 def _cfg(url='', **kwargs):
     return {
@@ -20,6 +19,7 @@ def _cfg(url='', **kwargs):
         'mean': (0.5, 0.5, 0.5), 'std': (0.5, 0.5, 0.5),
         **kwargs
     }
+
 
 class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).

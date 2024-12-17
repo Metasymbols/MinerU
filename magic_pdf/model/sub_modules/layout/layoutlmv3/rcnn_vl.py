@@ -1,23 +1,15 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
-import logging
-import numpy as np
-from typing import Dict, List, Optional, Tuple
+
+from itertools import count
+from typing import Dict, List, Optional
+
 import torch
-from torch import nn
-
-from detectron2.config import configurable
-from detectron2.structures import ImageList, Instances
-from detectron2.utils.events import get_event_storage
-
-from detectron2.modeling.backbone import Backbone, build_backbone
-from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY
 
 from detectron2.modeling.meta_arch import GeneralizedRCNN
+from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY
+from detectron2.structures import Instances
+from detectron2.utils.events import get_event_storage
 
-from detectron2.modeling.postprocessing import detector_postprocess
-from detectron2.modeling.roi_heads.fast_rcnn import fast_rcnn_inference_single_image
-from contextlib import contextmanager
-from itertools import count
 
 @META_ARCH_REGISTRY.register()
 class VLGeneralizedRCNN(GeneralizedRCNN):
@@ -56,7 +48,8 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
 
         images = self.preprocess_image(batched_inputs)
         if "instances" in batched_inputs[0]:
-            gt_instances = [x["instances"].to(self.device) for x in batched_inputs]
+            gt_instances = [x["instances"].to(
+                self.device) for x in batched_inputs]
         else:
             gt_instances = None
 
@@ -65,13 +58,16 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
         features = self.backbone(input)
 
         if self.proposal_generator is not None:
-            proposals, proposal_losses = self.proposal_generator(images, features, gt_instances)
+            proposals, proposal_losses = self.proposal_generator(
+                images, features, gt_instances)
         else:
             assert "proposals" in batched_inputs[0]
-            proposals = [x["proposals"].to(self.device) for x in batched_inputs]
+            proposals = [x["proposals"].to(self.device)
+                         for x in batched_inputs]
             proposal_losses = {}
 
-        _, detector_losses = self.roi_heads(images, features, proposals, gt_instances)
+        _, detector_losses = self.roi_heads(
+            images, features, proposals, gt_instances)
         if self.vis_period > 0:
             storage = get_event_storage()
             if storage.iter % self.vis_period == 0:
@@ -117,12 +113,15 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
                 proposals, _ = self.proposal_generator(images, features, None)
             else:
                 assert "proposals" in batched_inputs[0]
-                proposals = [x["proposals"].to(self.device) for x in batched_inputs]
+                proposals = [x["proposals"].to(self.device)
+                             for x in batched_inputs]
 
             results, _ = self.roi_heads(images, features, proposals, None)
         else:
-            detected_instances = [x.to(self.device) for x in detected_instances]
-            results = self.roi_heads.forward_with_given_boxes(features, detected_instances)
+            detected_instances = [x.to(self.device)
+                                  for x in detected_instances]
+            results = self.roi_heads.forward_with_given_boxes(
+                features, detected_instances)
 
         if do_postprocess:
             assert not torch.jit.is_scripting(), "Scripting is not supported for postprocess."

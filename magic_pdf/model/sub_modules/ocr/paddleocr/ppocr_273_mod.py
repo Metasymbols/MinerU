@@ -1,15 +1,15 @@
 import copy
 import time
+
 import cv2
 import numpy as np
-
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
+    check_img, merge_det_boxes, update_det_boxes)
 from paddleocr import PaddleOCR
 from ppocr.utils.logging import get_logger
 from ppocr.utils.utility import alpha_to_color, binarize_img
 from tools.infer.predict_system import sorted_boxes
-from tools.infer.utility import get_rotate_crop_image, get_minarea_rect_crop
-
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import update_det_boxes, merge_det_boxes, check_img
+from tools.infer.utility import get_minarea_rect_crop, get_rotate_crop_image
 
 logger = get_logger()
 
@@ -37,10 +37,10 @@ class ModifiedPaddleOCR(PaddleOCR):
             alpha_color: set RGB color Tuple for transparent parts replacement. Default is pure white.
         """
         assert isinstance(img, (np.ndarray, list, str, bytes))
-        if isinstance(img, list) and det == True:
+        if isinstance(img, list) and det is True:
             logger.error('When input a list of images, det must be false')
             exit(0)
-        if cls == True and self.use_angle_cls == False:
+        if cls is True and self.use_angle_cls is False:
             pass
             # logger.warning(
             #     'Since the angle classifier is not initialized, it will not be used during the forward process'

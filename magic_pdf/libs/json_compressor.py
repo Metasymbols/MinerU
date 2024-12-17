@@ -2,6 +2,7 @@ import json
 import brotli
 import base64
 
+
 class JsonCompressor:
 
     @staticmethod
