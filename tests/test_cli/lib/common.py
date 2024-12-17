@@ -1,16 +1,16 @@
 """common definitions."""
-import os
-import shutil
-import re
 import json
+import os
+import re
+import shutil
+
 import torch
 
+
 def clear_gpu_memory():
-    '''
-    clear GPU memory
-    '''
+    """clear GPU memory."""
     torch.cuda.empty_cache()
-    print("GPU memory cleared.")
+    print('GPU memory cleared.')
 
 def check_shell(cmd):
     """shell successful."""
@@ -19,7 +19,7 @@ def check_shell(cmd):
 
 def update_config_file(file_path, key, value):
     """update config file."""
-    with open(file_path, 'r', encoding="utf-8") as fr:
+    with open(file_path, 'r', encoding='utf-8') as fr:
         config  = json.loads(fr.read())
     config[key] = value
         # 保存修改后的内容

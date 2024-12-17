@@ -17,8 +17,8 @@ import click
 import numpy as np
 from loguru import logger
 
-from magic_pdf.libs.commons import mymax, get_top_percent_list
-from magic_pdf.filter.pdf_meta_scan import scan_max_page, junk_limit_min
+from magic_pdf.filter.pdf_meta_scan import junk_limit_min, scan_max_page
+from magic_pdf.libs.commons import get_top_percent_list, mymax
 
 TEXT_LEN_THRESHOLD = 100
 AVG_TEXT_LEN_THRESHOLD = 100
@@ -89,8 +89,8 @@ def merge_images(image_list, page_width, page_height, max_offset=5, max_gap=2):
 
 
 def classify_by_area(total_page: int, page_width, page_height, img_sz_list, text_len_list: list):
-    """
-    80%页面上的最大图大小一样并且面积超过页面面积0.6则返回False，否则返回True
+    """80%页面上的最大图大小一样并且面积超过页面面积0.6则返回False，否则返回True.
+
     :param pdf_path:
     :param total_page:
     :param page_width:
@@ -151,9 +151,9 @@ def classify_by_area(total_page: int, page_width, page_height, img_sz_list, text
 
 
 def classify_by_text_len(text_len_list: list, total_page: int):
-    """
-    随机抽取10%的页面，如果少于5个页面，那么就取全部页面。
-    查看页面上的文字长度，如果有任何一个页面的文字长度大于TEXT_LEN_THRESHOLD，那么就是文字pdf
+    """随机抽取10%的页面，如果少于5个页面，那么就取全部页面。
+    查看页面上的文字长度，如果有任何一个页面的文字长度大于TEXT_LEN_THRESHOLD，那么就是文字pdf.
+
     :param total_page:
     :param text_len_list:
     :return:
@@ -176,9 +176,8 @@ def classify_by_text_len(text_len_list: list, total_page: int):
 
 
 def classify_by_avg_words(text_len_list: list):
-    """
-    补充规则，如果平均每页字数少于 AVG_TEXT_LEN_THRESHOLD，就不是文字pdf
-    主要是各种图集
+    """补充规则，如果平均每页字数少于 AVG_TEXT_LEN_THRESHOLD，就不是文字pdf 主要是各种图集.
+
     :param text_len_list:
     :return:
     """
@@ -197,9 +196,9 @@ def classify_by_avg_words(text_len_list: list):
 
 
 def classify_by_img_num(img_sz_list: list, img_num_list: list):
-    """
-    补充规则，有一种扫描版本的PDF，每一页都会放所有的扫描页进去，在 metascan 时会被去重，
-    这种pdf的 metasca 扫描结果的特点是 img_sz_list 内全是空元素，img_num_list中每一页的数量都很大且相同
+    """补充规则，有一种扫描版本的PDF，每一页都会放所有的扫描页进去，在 metascan 时会被去重， 这种pdf的 metasca
+    扫描结果的特点是 img_sz_list 内全是空元素，img_num_list中每一页的数量都很大且相同.
+
     :param img_sz_list:
     :param img_num_list:
     :return:
@@ -222,8 +221,7 @@ def classify_by_img_num(img_sz_list: list, img_num_list: list):
 
 
 def classify_by_text_layout(text_layout_per_page: list):
-    """
-    判断文本布局是否以竖排为主。
+    """判断文本布局是否以竖排为主。
 
     Args:
         text_layout_per_page (list): 文本布局列表，列表中的每个元素表示一页的文本布局，
@@ -306,8 +304,8 @@ def classify_by_img_narrow_strips(page_width, page_height, img_sz_list):
 
 def classify(total_page: int, page_width, page_height, img_sz_list: list, text_len_list: list, img_num_list: list,
              text_layout_list: list, invalid_chars: bool):
-    """
-    这里的图片和页面长度单位是pts
+    """这里的图片和页面长度单位是pts.
+
     :param total_page:
     :param text_len_list:
     :param page_width:
@@ -341,21 +339,21 @@ def classify(total_page: int, page_width, page_height, img_sz_list: list, text_l
 
 
 @click.command()
-@click.option("--json-file", type=str, help="pdf信息")
+@click.option('--json-file', type=str, help='pdf信息')
 def main(json_file):
     if json_file is None:
-        print("json_file is None", file=sys.stderr)
+        print('json_file is None', file=sys.stderr)
         exit(0)
     try:
-        with open(json_file, "r") as f:
+        with open(json_file, 'r') as f:
             for l in f:
-                if l.strip() == "":
+                if l.strip() == '':
                     continue
                 o = json.loads(l)
-                total_page = o["total_page"]
-                page_width = o["page_width_pts"]
-                page_height = o["page_height_pts"]
-                img_sz_list = o["image_info_per_page"]
+                total_page = o['total_page']
+                page_width = o['page_width_pts']
+                page_height = o['page_height_pts']
+                img_sz_list = o['image_info_per_page']
                 text_len_list = o['text_len_per_page']
                 text_layout_list = o['text_layout_per_page']
                 pdf_path = o['pdf_path']
@@ -367,10 +365,10 @@ def main(json_file):
                 o['is_text_pdf'] = tag
                 print(json.dumps(o, ensure_ascii=False))
     except Exception as e:
-        print("ERROR: ", e, file=sys.stderr)
+        print('ERROR: ', e, file=sys.stderr)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
     # false = False
     # true = True

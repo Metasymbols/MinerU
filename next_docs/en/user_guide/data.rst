@@ -10,10 +10,6 @@ Data
 
    data/read_api
 
-   data/data_reader_writer 
+   data/data_reader_writer
 
    data/io
-
-
-
-

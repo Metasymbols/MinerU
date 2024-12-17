@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
@@ -13,43 +12,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""PyTorch LayoutLMv3 model. """
+"""PyTorch LayoutLMv3 model."""
 import math
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint
+from timm.models.layers import to_2tuple
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-
 from transformers import apply_chunking_to_forward
 from transformers.modeling_outputs import (
     BaseModelOutputWithPastAndCrossAttentions,
-    BaseModelOutputWithPoolingAndCrossAttentions,
-    MaskedLMOutput,
-    TokenClassifierOutput,
-    QuestionAnsweringModelOutput,
-    SequenceClassifierOutput,
-)
-from transformers.modeling_utils import PreTrainedModel, find_pruneable_heads_and_indices, prune_linear_layer
-from transformers.models.roberta.modeling_roberta import (
-    RobertaIntermediate,
-    RobertaLMHead,
-    RobertaOutput,
-    RobertaSelfOutput,
-)
+    BaseModelOutputWithPoolingAndCrossAttentions, MaskedLMOutput,
+    QuestionAnsweringModelOutput, SequenceClassifierOutput,
+    TokenClassifierOutput)
+from transformers.modeling_utils import (PreTrainedModel,
+                                         find_pruneable_heads_and_indices,
+                                         prune_linear_layer)
+from transformers.models.roberta.modeling_roberta import (RobertaIntermediate,
+                                                          RobertaLMHead,
+                                                          RobertaOutput,
+                                                          RobertaSelfOutput)
 from transformers.utils import logging
 
 from .configuration_layoutlmv3 import LayoutLMv3Config
-from timm.models.layers import to_2tuple
-
 
 logger = logging.get_logger(__name__)
 
 
 class PatchEmbed(nn.Module):
-    """ Image to Patch Embedding
-    """
+    """Image to Patch Embedding."""
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
         img_size = to_2tuple(img_size)
@@ -75,9 +68,8 @@ class PatchEmbed(nn.Module):
         return x
 
 class LayoutLMv3Embeddings(nn.Module):
-    """
-    Same as BertEmbeddings with a tiny tweak for positional embeddings indexing.
-    """
+    """Same as BertEmbeddings with a tiny tweak for positional embeddings
+    indexing."""
 
     # Copied from transformers.models.bert.modeling_bert.BertEmbeddings.__init__
     def __init__(self, config):
@@ -89,7 +81,7 @@ class LayoutLMv3Embeddings(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
-        self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
+        self.register_buffer('position_ids', torch.arange(config.max_position_embeddings).expand((1, -1)))
 
         # End copy
         self.padding_idx = config.pad_token_id
@@ -110,7 +102,7 @@ class LayoutLMv3Embeddings(nn.Module):
             right_position_embeddings = self.x_position_embeddings(bbox[:, :, 2])
             lower_position_embeddings = self.y_position_embeddings(bbox[:, :, 3])
         except IndexError as e:
-            raise IndexError("The :obj:`bbox` coordinate values should be within 0-1000 range.") from e
+            raise IndexError('The :obj:`bbox` coordinate values should be within 0-1000 range.') from e
 
         h_position_embeddings = self.h_position_embeddings(torch.clip(bbox[:, :, 3] - bbox[:, :, 1], 0, 1023))
         w_position_embeddings = self.w_position_embeddings(torch.clip(bbox[:, :, 2] - bbox[:, :, 0], 0, 1023))
@@ -130,9 +122,9 @@ class LayoutLMv3Embeddings(nn.Module):
         return spatial_position_embeddings
 
     def create_position_ids_from_input_ids(self, input_ids, padding_idx, past_key_values_length=0):
-        """
-        Replace non-padding symbols with their position numbers. Position numbers begin at padding_idx+1. Padding symbols
-        are ignored. This is modified from fairseq's `utils.make_positions`.
+        """Replace non-padding symbols with their position numbers. Position
+        numbers begin at padding_idx+1. Padding symbols are ignored. This is
+        modified from fairseq's `utils.make_positions`.
 
         Args:
             x: torch.Tensor x:
@@ -186,8 +178,8 @@ class LayoutLMv3Embeddings(nn.Module):
         return embeddings
 
     def create_position_ids_from_inputs_embeds(self, inputs_embeds):
-        """
-        We are provided embeddings directly. We cannot infer which are padded so just generate sequential position ids.
+        """We are provided embeddings directly. We cannot infer which are
+        padded so just generate sequential position ids.
 
         Args:
             inputs_embeds: torch.Tensor≈
@@ -204,17 +196,15 @@ class LayoutLMv3Embeddings(nn.Module):
 
 
 class LayoutLMv3PreTrainedModel(PreTrainedModel):
-    """
-    An abstract class to handle weights initialization and a simple interface for downloading and loading pretrained
-    models.
-    """
+    """An abstract class to handle weights initialization and a simple
+    interface for downloading and loading pretrained models."""
 
     config_class = LayoutLMv3Config
-    base_model_prefix = "layoutlmv3"
+    base_model_prefix = 'layoutlmv3'
 
     # Copied from transformers.models.bert.modeling_bert.BertPreTrainedModel._init_weights
     def _init_weights(self, module):
-        """Initialize the weights"""
+        """Initialize the weights."""
         if isinstance(module, nn.Linear):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
@@ -233,10 +223,10 @@ class LayoutLMv3PreTrainedModel(PreTrainedModel):
 class LayoutLMv3SelfAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
+        if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, 'embedding_size'):
             raise ValueError(
-                f"The hidden size ({config.hidden_size}) is not a multiple of the number of attention "
-                f"heads ({config.num_attention_heads})"
+                f'The hidden size ({config.hidden_size}) is not a multiple of the number of attention '
+                f'heads ({config.num_attention_heads})'
             )
 
         self.num_attention_heads = config.num_attention_heads
@@ -257,14 +247,13 @@ class LayoutLMv3SelfAttention(nn.Module):
         return x.permute(0, 2, 1, 3)
 
     def cogview_attn(self, attention_scores, alpha=32):
-        '''
-        https://arxiv.org/pdf/2105.13290.pdf
-        Section 2.4 Stabilization of training: Precision Bottleneck Relaxation (PB-Relax).
-        A replacement of the original nn.Softmax(dim=-1)(attention_scores)
-        Seems the new attention_probs will result in a slower speed and a little bias
-        Can use torch.allclose(standard_attention_probs, cogview_attention_probs, atol=1e-08) for comparison
-        The smaller atol (e.g., 1e-08), the better.
-        '''
+        """https://arxiv.org/pdf/2105.13290.pdf Section 2.4 Stabilization of
+        training: Precision Bottleneck Relaxation (PB-Relax).
+
+        A replacement of the original nn.Softmax(dim=-1)(attention_scores) Seems the new attention_probs will result in
+        a slower speed and a little bias Can use torch.allclose(standard_attention_probs, cogview_attention_probs,
+        atol=1e-08) for comparison The smaller atol (e.g., 1e-08), the better.
+        """
         scaled_attention_scores = attention_scores / alpha
         max_value = scaled_attention_scores.amax(dim=(-1)).unsqueeze(-1)
         # max_value = scaled_attention_scores.amax(dim=(-2, -1)).unsqueeze(-1).unsqueeze(-1)
@@ -414,7 +403,7 @@ class LayoutLMv3Layer(nn.Module):
         self.seq_len_dim = 1
         self.attention = LayoutLMv3Attention(config)
         assert not config.is_decoder and not config.add_cross_attention, \
-            "This version do not support decoder. Please refer to RoBERTa for implementation of is_decoder."
+            'This version do not support decoder. Please refer to RoBERTa for implementation of is_decoder.'
         self.intermediate = RobertaIntermediate(config)
         self.output = RobertaOutput(config)
 
@@ -618,7 +607,7 @@ class LayoutLMv3Encoder(nn.Module):
 
                 if use_cache:
                     logger.warning(
-                        "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+                        '`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`...'
                     )
                     use_cache = False
 
@@ -697,17 +686,16 @@ class LayoutLMv3Encoder(nn.Module):
 
 
 class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
-    """
-    """
+    """"""
 
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing = [r'position_ids']
 
     # Copied from transformers.models.bert.modeling_bert.BertModel.__init__ with Bert->Roberta
     def __init__(self, config, detection=False, out_features=None, image_only=False):
         super().__init__(config)
         self.config = config
         assert not config.is_decoder and not config.add_cross_attention, \
-            "This version do not support decoder. Please refer to RoBERTa for implementation of is_decoder."
+            'This version do not support decoder. Please refer to RoBERTa for implementation of is_decoder.'
         self.detection = detection
         if not self.detection:
             self.image_only = False
@@ -750,8 +738,9 @@ class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
         self.embeddings.word_embeddings = value
 
     def _prune_heads(self, heads_to_prune):
-        """
-        Prunes heads of the model. heads_to_prune: dict of {layer_num: list of heads to prune in this layer} See base
+        """Prunes heads of the model.
+
+        heads_to_prune: dict of {layer_num: list of heads to prune in this layer} See base
         class PreTrainedModel
         """
         for layer, heads in heads_to_prune.items():
@@ -861,7 +850,7 @@ class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
             batch_size = len(images)
             device = images.device
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds or images")
+            raise ValueError('You have to specify either input_ids or inputs_embeds or images')
 
         if not self.image_only:
             # past_key_values_length
@@ -984,8 +973,8 @@ class LayoutLMv3Model(LayoutLMv3PreTrainedModel):
 
 
 class LayoutLMv3ClassificationHead(nn.Module):
-    """
-    Head for sentence-level classification tasks.
+    """Head for sentence-level classification tasks.
+
     Reference: RobertaClassificationHead
     """
 
@@ -1013,8 +1002,8 @@ class LayoutLMv3ClassificationHead(nn.Module):
 
 
 class LayoutLMv3ForTokenClassification(LayoutLMv3PreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_unexpected = [r'pooler']
+    _keys_to_ignore_on_load_missing = [r'position_ids']
 
     def __init__(self, config):
         super().__init__(config)
@@ -1099,8 +1088,8 @@ class LayoutLMv3ForTokenClassification(LayoutLMv3PreTrainedModel):
 
 
 class LayoutLMv3ForQuestionAnswering(LayoutLMv3PreTrainedModel):
-    _keys_to_ignore_on_load_unexpected = [r"pooler"]
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_unexpected = [r'pooler']
+    _keys_to_ignore_on_load_missing = [r'position_ids']
 
     def __init__(self, config):
         super().__init__(config)
@@ -1194,7 +1183,7 @@ class LayoutLMv3ForQuestionAnswering(LayoutLMv3PreTrainedModel):
 
 
 class LayoutLMv3ForSequenceClassification(LayoutLMv3PreTrainedModel):
-    _keys_to_ignore_on_load_missing = [r"position_ids"]
+    _keys_to_ignore_on_load_missing = [r'position_ids']
 
     def __init__(self, config):
         super().__init__(config)
@@ -1251,22 +1240,22 @@ class LayoutLMv3ForSequenceClassification(LayoutLMv3PreTrainedModel):
         if labels is not None:
             if self.config.problem_type is None:
                 if self.num_labels == 1:
-                    self.config.problem_type = "regression"
+                    self.config.problem_type = 'regression'
                 elif self.num_labels > 1 and (labels.dtype == torch.long or labels.dtype == torch.int):
-                    self.config.problem_type = "single_label_classification"
+                    self.config.problem_type = 'single_label_classification'
                 else:
-                    self.config.problem_type = "multi_label_classification"
+                    self.config.problem_type = 'multi_label_classification'
 
-            if self.config.problem_type == "regression":
+            if self.config.problem_type == 'regression':
                 loss_fct = MSELoss()
                 if self.num_labels == 1:
                     loss = loss_fct(logits.squeeze(), labels.squeeze())
                 else:
                     loss = loss_fct(logits, labels)
-            elif self.config.problem_type == "single_label_classification":
+            elif self.config.problem_type == 'single_label_classification':
                 loss_fct = CrossEntropyLoss()
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
-            elif self.config.problem_type == "multi_label_classification":
+            elif self.config.problem_type == 'multi_label_classification':
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(logits, labels)
 

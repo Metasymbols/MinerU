@@ -448,8 +448,8 @@ def get_overlap_area(bbox1, bbox2):
 
 
 def calculate_vertical_projection_overlap_ratio(block1, block2):
-    """
-    Calculate the proportion of the x-axis covered by the vertical projection of two blocks.
+    """Calculate the proportion of the x-axis covered by the vertical
+    projection of two blocks.
 
     Args:
         block1 (tuple): Coordinates of the first block (x0, y0, x1, y1).

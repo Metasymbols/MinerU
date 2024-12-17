@@ -29,7 +29,7 @@ conda activate MinerU
 pip install -U magic-pdf[full] --extra-index-url https://wheels.myhloli.com -i https://mirrors.aliyun.com/pypi/simple
 ```
 
-> [!IMPORTANT]
+> \[!IMPORTANT\]
 > 下载完成后，务必通过以下命令确认magic-pdf的版本是否正确
 >
 > ```bash
@@ -47,7 +47,7 @@ pip install -U magic-pdf[full] --extra-index-url https://wheels.myhloli.com -i h
 完成[5.下载模型](#5-下载模型)步骤后，脚本会自动生成用户目录下的magic-pdf.json文件，并自动配置默认模型路径。
 您可在【用户目录】下找到magic-pdf.json文件。
 
-> [!TIP]
+> \[!TIP\]
 > windows用户目录为 "C:/Users/用户名"
 
 ## 7. 第一次运行
@@ -83,7 +83,7 @@ pip install --force-reinstall torch==2.3.1 torchvision==0.18.1 --index-url https
 magic-pdf -p small_ocr.pdf -o ./output
 ```
 
-> [!TIP]
+> \[!TIP\]
 > CUDA加速是否生效可以根据log中输出的各个阶段的耗时来简单判断，通常情况下，`layout detection time` 和 `mfr time` 应提速10倍以上。
 
 ## 9. 为ocr开启cuda加速
@@ -99,5 +99,6 @@ pip install paddlepaddle-gpu==2.6.1
 ```bash
 magic-pdf -p small_ocr.pdf -o ./output
 ```
-> [!TIP]
+
+> \[!TIP\]
 > CUDA加速是否生效可以根据log中输出的各个阶段cost耗时来简单判断，通常情况下，`ocr time`应提速10倍以上。

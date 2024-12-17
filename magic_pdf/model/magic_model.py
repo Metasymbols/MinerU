@@ -1043,4 +1043,3 @@ class MagicModel:
 
     def get_model_list(self, page_no):
         return self.__model_list[page_no]
-

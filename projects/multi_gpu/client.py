@@ -1,8 +1,9 @@
 import base64
-import requests
+
 import numpy as np
-from loguru import logger
+import requests
 from joblib import Parallel, delayed
+from loguru import logger
 
 
 def to_b64(file_path):

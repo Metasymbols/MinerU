@@ -3,8 +3,7 @@ import mimetypes
 
 
 def is_pdf(filename, file):
-    """
-    判断文件是否为PDF格式。
+    """判断文件是否为PDF格式。
 
     :param filename: 文件名
     :param file: 文件对象
@@ -35,8 +34,7 @@ def is_pdf(filename, file):
 
 
 def url_is_pdf(file):
-    """
-    判断文件是否为PDF格式。
+    """判断文件是否为PDF格式。
 
     :param file: 文件对象
     :return: 如果文件是PDF格式，则返回True，否则返回False
@@ -51,8 +49,7 @@ def url_is_pdf(file):
 
 
 def calculate_file_hash(file, algorithm='sha256'):
-    """
-    计算给定文件的哈希值。
+    """计算给定文件的哈希值。
 
     :param file: 文件对象
     :param algorithm: 哈希算法的名字，如:'sha256', 'md5', 'sha1'等

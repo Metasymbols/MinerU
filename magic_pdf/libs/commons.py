@@ -4,8 +4,8 @@ def join_path(*args):
 
 
 def get_top_percent_list(num_list, percent):
-    """
-    获取列表中前百分之多少的元素
+    """获取列表中前百分之多少的元素.
+
     :param num_list:
     :param percent:
     :return:
@@ -30,14 +30,11 @@ def mymax(alist: list):
 
 
 def parse_bucket_key(s3_full_path: str):
-    """
-    输入 s3://bucket/path/to/my/file.txt
-    输出 bucket, path/to/my/file.txt
-    """
+    """输入 s3://bucket/path/to/my/file.txt 输出 bucket, path/to/my/file.txt."""
     s3_full_path = s3_full_path.strip()
-    if s3_full_path.startswith("s3://"):
+    if s3_full_path.startswith('s3://'):
         s3_full_path = s3_full_path[5:]
-    if s3_full_path.startswith("/"):
+    if s3_full_path.startswith('/'):
         s3_full_path = s3_full_path[1:]
-    bucket, key = s3_full_path.split("/", 1)
+    bucket, key = s3_full_path.split('/', 1)
     return bucket, key

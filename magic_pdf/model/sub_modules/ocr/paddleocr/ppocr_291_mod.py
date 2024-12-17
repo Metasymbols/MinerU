@@ -1,17 +1,18 @@
 import copy
 import time
 
-
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
 from paddleocr.paddleocr import check_img, logger
 from paddleocr.ppocr.utils.utility import alpha_to_color, binarize_img
 from paddleocr.tools.infer.predict_system import sorted_boxes
-from paddleocr.tools.infer.utility import slice_generator, merge_fragmented, get_rotate_crop_image, \
-    get_minarea_rect_crop
+from paddleocr.tools.infer.utility import (get_minarea_rect_crop,
+                                           get_rotate_crop_image,
+                                           merge_fragmented, slice_generator)
 
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import update_det_boxes
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import \
+    update_det_boxes
 
 
 class ModifiedPaddleOCR(PaddleOCR):
@@ -28,8 +29,7 @@ class ModifiedPaddleOCR(PaddleOCR):
         slice={},
         mfd_res=None,
     ):
-        """
-        OCR with PaddleOCR
+        """OCR with PaddleOCR.
 
         Args:
             img: Image for OCR. It can be an ndarray, img_path, or a list of ndarrays.
@@ -58,11 +58,11 @@ class ModifiedPaddleOCR(PaddleOCR):
         """
         assert isinstance(img, (np.ndarray, list, str, bytes))
         if isinstance(img, list) and det == True:
-            logger.error("When input a list of images, det must be false")
+            logger.error('When input a list of images, det must be false')
             exit(0)
         if cls == True and self.use_angle_cls == False:
             logger.warning(
-                "Since the angle classifier is not initialized, it will not be used during the forward process"
+                'Since the angle classifier is not initialized, it will not be used during the forward process'
             )
 
         img, flag_gif, flag_pdf = check_img(img, alpha_color)
@@ -123,10 +123,10 @@ class ModifiedPaddleOCR(PaddleOCR):
             return ocr_res
 
     def __call__(self, img, cls=True, slice={}, mfd_res=None):
-        time_dict = {"det": 0, "rec": 0, "cls": 0, "all": 0}
+        time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}
 
         if img is None:
-            logger.debug("no valid image provided")
+            logger.debug('no valid image provided')
             return None, None, time_dict
 
         start = time.time()
@@ -134,8 +134,8 @@ class ModifiedPaddleOCR(PaddleOCR):
         if slice:
             slice_gen = slice_generator(
                 img,
-                horizontal_stride=slice["horizontal_stride"],
-                vertical_stride=slice["vertical_stride"],
+                horizontal_stride=slice['horizontal_stride'],
+                vertical_stride=slice['vertical_stride'],
             )
             elapsed = []
             dt_slice_boxes = []
@@ -150,23 +150,23 @@ class ModifiedPaddleOCR(PaddleOCR):
 
             dt_boxes = merge_fragmented(
                 boxes=dt_boxes,
-                x_threshold=slice["merge_x_thres"],
-                y_threshold=slice["merge_y_thres"],
+                x_threshold=slice['merge_x_thres'],
+                y_threshold=slice['merge_y_thres'],
             )
             elapse = sum(elapsed)
         else:
             dt_boxes, elapse = self.text_detector(img)
 
-        time_dict["det"] = elapse
+        time_dict['det'] = elapse
 
         if dt_boxes is None:
-            logger.debug("no dt_boxes found, elapsed : {}".format(elapse))
+            logger.debug('no dt_boxes found, elapsed : {}'.format(elapse))
             end = time.time()
-            time_dict["all"] = end - start
+            time_dict['all'] = end - start
             return None, None, time_dict
         else:
             logger.debug(
-                "dt_boxes num : {}, elapsed : {}".format(len(dt_boxes), elapse)
+                'dt_boxes num : {}, elapsed : {}'.format(len(dt_boxes), elapse)
             )
         img_crop_list = []
 
@@ -176,30 +176,30 @@ class ModifiedPaddleOCR(PaddleOCR):
             bef = time.time()
             dt_boxes = update_det_boxes(dt_boxes, mfd_res)
             aft = time.time()
-            logger.debug("split text box by formula, new dt_boxes num : {}, elapsed : {}".format(
+            logger.debug('split text box by formula, new dt_boxes num : {}, elapsed : {}'.format(
                 len(dt_boxes), aft - bef))
 
         for bno in range(len(dt_boxes)):
             tmp_box = copy.deepcopy(dt_boxes[bno])
-            if self.args.det_box_type == "quad":
+            if self.args.det_box_type == 'quad':
                 img_crop = get_rotate_crop_image(ori_im, tmp_box)
             else:
                 img_crop = get_minarea_rect_crop(ori_im, tmp_box)
             img_crop_list.append(img_crop)
         if self.use_angle_cls and cls:
             img_crop_list, angle_list, elapse = self.text_classifier(img_crop_list)
-            time_dict["cls"] = elapse
+            time_dict['cls'] = elapse
             logger.debug(
-                "cls num  : {}, elapsed : {}".format(len(img_crop_list), elapse)
+                'cls num  : {}, elapsed : {}'.format(len(img_crop_list), elapse)
             )
         if len(img_crop_list) > 1000:
             logger.debug(
-                f"rec crops num: {len(img_crop_list)}, time and memory cost may be large."
+                f'rec crops num: {len(img_crop_list)}, time and memory cost may be large.'
             )
 
         rec_res, elapse = self.text_recognizer(img_crop_list)
-        time_dict["rec"] = elapse
-        logger.debug("rec_res num  : {}, elapsed : {}".format(len(rec_res), elapse))
+        time_dict['rec'] = elapse
+        logger.debug('rec_res num  : {}, elapsed : {}'.format(len(rec_res), elapse))
         if self.args.save_crop_res:
             self.draw_crop_rec_res(self.args.crop_res_save_dir, img_crop_list, rec_res)
         filter_boxes, filter_rec_res = [], []
@@ -209,5 +209,5 @@ class ModifiedPaddleOCR(PaddleOCR):
                 filter_boxes.append(box)
                 filter_rec_res.append(rec_result)
         end = time.time()
-        time_dict["all"] = end - start
+        time_dict['all'] = end - start
         return filter_boxes, filter_rec_res, time_dict

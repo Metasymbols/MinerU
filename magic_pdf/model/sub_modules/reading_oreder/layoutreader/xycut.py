@@ -1,11 +1,11 @@
 from typing import List
+
 import cv2
 import numpy as np
 
 
 def projection_by_bboxes(boxes: np.array, axis: int) -> np.ndarray:
-    """
-     通过一组 bbox 获得投影直方图，最后以 per-pixel 形式输出
+    """通过一组 bbox 获得投影直方图，最后以 per-pixel 形式输出.
 
     Args:
         boxes: [N, 4]
@@ -13,7 +13,6 @@ def projection_by_bboxes(boxes: np.array, axis: int) -> np.ndarray:
 
     Returns:
         1D 投影直方图，长度为投影方向坐标的最大值(我们不需要图片的实际边长，因为只是要找文本框的间隔)
-
     """
     assert axis in [0, 1]
     length = np.max(boxes[:, axis::2])

@@ -4,7 +4,7 @@ from doclayout_yolo import YOLOv10
 class DocLayoutYOLOModel:
     def __init__(self, weight: str, device: str):
         if not weight:
-            raise ValueError("weight cannot be empty")
+            raise ValueError('weight cannot be empty')
         self.model = YOLOv10(weight)
         self.device = device
 

@@ -1,5 +1,4 @@
 from loguru import logger
-
 from magic_pdf.config.constants import MODEL_NAME
 from magic_pdf.model.model_list import AtomicModel
 from magic_pdf.model.sub_modules.layout.doclayout_yolo.DocLayoutYOLO import \
@@ -21,7 +20,8 @@ from magic_pdf.model.sub_modules.table.tablemaster.tablemaster_paddle import \
 
 def table_model_init(table_model_type, model_path, max_time, _device_='cpu'):
     if table_model_type == MODEL_NAME.STRUCT_EQTABLE:
-        table_model = StructTableModel(model_path, max_new_tokens=2048, max_time=max_time)
+        table_model = StructTableModel(
+            model_path, max_new_tokens=2048, max_time=max_time)
     elif table_model_type == MODEL_NAME.TABLE_MASTER:
         config = {
             'model_dir': model_path,
@@ -107,8 +107,10 @@ class AtomModelSingleton:
             key = atom_model_name
 
         if key not in self._models:
-            self._models[key] = atom_model_init(model_name=atom_model_name, **kwargs)
+            self._models[key] = atom_model_init(
+                model_name=atom_model_name, **kwargs)
         return self._models[key]
+
 
 def atom_model_init(model_name: str, **kwargs):
     atom_model = None

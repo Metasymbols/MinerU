@@ -6,12 +6,12 @@
 -  :ref:`ubuntu_22_04_lts_section`
 -  :ref:`windows_10_or_11_section`
 -  使用 Docker 快速部署
- 
+
 .. admonition:: Important
     :class: tip
 
     Docker 需要至少 16GB 显存的 GPU，并且所有加速功能默认启用。
-   
+
     在运行此 Docker 容器之前，您可以使用以下命令检查您的设备是否支持 Docker 上的 CUDA 加速。
 
     .. code-block:: sh

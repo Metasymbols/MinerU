@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2018 The Open AI Team Authors and The HuggingFace Inc. team.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +16,15 @@
 from transformers.models.roberta import RobertaTokenizer
 from transformers.utils import logging
 
-
 logger = logging.get_logger(__name__)
 
 VOCAB_FILES_NAMES = {
-    "vocab_file": "vocab.json",
-    "merges_file": "merges.txt",
+    'vocab_file': 'vocab.json',
+    'merges_file': 'merges.txt',
 }
 
 class LayoutLMv3Tokenizer(RobertaTokenizer):
     vocab_files_names = VOCAB_FILES_NAMES
     # pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
     # max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
-    model_input_names = ["input_ids", "attention_mask"]
+    model_input_names = ['input_ids', 'attention_mask']

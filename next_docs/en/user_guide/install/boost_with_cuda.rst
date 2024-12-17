@@ -1,5 +1,5 @@
 
-Boost With Cuda 
+Boost With Cuda
 ================
 
 
@@ -16,7 +16,7 @@ appropriate guide based on your system:
 
    Docker requires a GPU with at least 16GB of VRAM, and all acceleration features are enabled by default.
 
-   Before running this Docker, you can use the following command to check if your device supports CUDA acceleration on Docker. 
+   Before running this Docker, you can use the following command to check if your device supports CUDA acceleration on Docker.
 
    .. code-block:: bash
 
@@ -280,7 +280,7 @@ test CUDA-accelerated parsing performance.
 
     ❗️Ensure the following versions are specified in the command:
 
- 
+
     .. code:: sh
 
          torch==2.3.1 torchvision==0.18.1

@@ -11,18 +11,17 @@ import matplotlib.figure as mplfigure
 import numpy as np
 import pycocotools.mask as mask_util
 import torch
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from PIL import Image
-
 from detectron2.data import MetadataCatalog
 from detectron2.structures import (BitMasks, Boxes, BoxMode, Keypoints,
                                    PolygonMasks, RotatedBoxes)
 from detectron2.utils.colormap import random_color
 from detectron2.utils.file_io import PathManager
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["ColorMode", "VisImage", "Visualizer"]
+__all__ = ['ColorMode', 'VisImage', 'Visualizer']
 
 
 _SMALL_OBJECT_AREA_THRESH = 1000
@@ -38,9 +37,7 @@ _KEYPOINT_THRESHOLD = 0.05
 
 @unique
 class ColorMode(Enum):
-    """
-    Enum of different color modes to use for instance visualizations.
-    """
+    """Enum of different color modes to use for instance visualizations."""
 
     IMAGE = 0
     """
@@ -75,9 +72,9 @@ class GenericMask:
         m = mask_or_polygons
         if isinstance(m, dict):
             # RLEs
-            assert "counts" in m and "size" in m
-            if isinstance(m["counts"], list):  # uncompressed RLEs
-                h, w = m["size"]
+            assert 'counts' in m and 'size' in m
+            if isinstance(m['counts'], list):  # uncompressed RLEs
+                h, w = m['size']
                 assert h == height and w == width
                 m = mask_util.frPyObjects(m, h, w)
             self._mask = mask_util.decode(m)[:, :]
@@ -92,8 +89,8 @@ class GenericMask:
             assert m.shape == (
                 height,
                 width,
-            ), f"mask shape: {m.shape}, target dims: {height}, {width}"
-            self._mask = m.astype("uint8")
+            ), f'mask shape: {m.shape}, target dims: {height}, {width}'
+            self._mask = m.astype('uint8')
             return
 
         raise ValueError(
@@ -129,7 +126,7 @@ class GenericMask:
         # some versions of cv2 does not support incontiguous arr
         mask = np.ascontiguousarray(mask)
         res = cv2.findContours(mask.astype(
-            "uint8"), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+            'uint8'), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
         hierarchy = res[-1]
         if hierarchy is None:  # empty mask
             return [], False
@@ -160,9 +157,7 @@ class GenericMask:
 
 
 class _PanopticPrediction:
-    """
-    Unify different panoptic annotation/prediction formats
-    """
+    """Unify different panoptic annotation/prediction formats."""
 
     def __init__(self, panoptic_seg, segments_info, metadata=None):
         if segments_info is None:
@@ -181,16 +176,16 @@ class _PanopticPrediction:
                 isthing = pred_class in metadata.thing_dataset_id_to_contiguous_id.values()
                 segments_info.append(
                     {
-                        "id": int(panoptic_label),
-                        "category_id": int(pred_class),
-                        "isthing": bool(isthing),
+                        'id': int(panoptic_label),
+                        'category_id': int(pred_class),
+                        'isthing': bool(isthing),
                     }
                 )
         del metadata
 
         self._seg = panoptic_seg
 
-        self._sinfo = {s["id"]: s for s in segments_info}  # seg id -> seg info
+        self._sinfo = {s['id']: s for s in segments_info}  # seg id -> seg info
         segment_ids, areas = torch.unique(
             panoptic_seg, sorted=True, return_counts=True)
         areas = areas.numpy()
@@ -199,7 +194,7 @@ class _PanopticPrediction:
         self._seg_ids = self._seg_ids.tolist()
         for sid, area in zip(self._seg_ids, self._seg_areas):
             if sid in self._sinfo:
-                self._sinfo[sid]["area"] = float(area)
+                self._sinfo[sid]['area'] = float(area)
 
     def non_empty_mask(self):
         """
@@ -214,13 +209,13 @@ class _PanopticPrediction:
             return np.zeros(self._seg.shape, dtype=np.uint8)
         assert (
             len(empty_ids) == 1
-        ), ">1 ids corresponds to no labels. This is currently not supported"
+        ), '>1 ids corresponds to no labels. This is currently not supported'
         return (self._seg != empty_ids[0]).numpy().astype(np.bool)
 
     def semantic_masks(self):
         for sid in self._seg_ids:
             sinfo = self._sinfo.get(sid)
-            if sinfo is None or sinfo["isthing"]:
+            if sinfo is None or sinfo['isthing']:
                 # Some pixels (e.g. id 0 in PanopticFPN) have no instance or semantic predictions.
                 continue
             yield (self._seg == sid).numpy().astype(np.bool), sinfo
@@ -228,7 +223,7 @@ class _PanopticPrediction:
     def instance_masks(self):
         for sid in self._seg_ids:
             sinfo = self._sinfo.get(sid)
-            if sinfo is None or not sinfo["isthing"]:
+            if sinfo is None or not sinfo['isthing']:
                 continue
             mask = (self._seg == sid).numpy().astype(np.bool)
             if mask.sum() > 0:
@@ -256,12 +251,12 @@ def _create_text_labels(classes, scores, class_names, is_crowd=None):
 
     if scores is not None:
         if labels is None:
-            labels = ["{:.0f}%".format(s * 100) for s in scores]
+            labels = ['{:.0f}%'.format(s * 100) for s in scores]
         else:
-            labels = ["{} {:.0f}%".format(la, s * 100)
+            labels = ['{} {:.0f}%'.format(la, s * 100)
                       for la, s in zip(labels, scores)]
     if labels is not None and is_crowd is not None:
-        labels = [la + ("|crowd" if crowd else "")
+        labels = [la + ('|crowd' if crowd else '')
                   for la, crowd in zip(labels, is_crowd)]
     return labels
 
@@ -298,7 +293,7 @@ class VisImage:
         self.canvas = FigureCanvasAgg(fig)
         # self.canvas = mpl.backends.backend_cairo.FigureCanvasCairo(fig)
         ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
-        ax.axis("off")
+        ax.axis('off')
         self.fig = fig
         self.ax = ax
         self.reset_image(img)
@@ -308,9 +303,9 @@ class VisImage:
         Args:
             img: same as in __init__
         """
-        img = img.astype("uint8")
+        img = img.astype('uint8')
         self.ax.imshow(img, extent=(
-            0, self.width, self.height, 0), interpolation="nearest")
+            0, self.width, self.height, 0), interpolation='nearest')
 
     def save(self, filepath):
         """
@@ -334,16 +329,15 @@ class VisImage:
         # width, height = self.width, self.height
         # s = buf.getvalue()
 
-        buffer = np.frombuffer(s, dtype="uint8")
+        buffer = np.frombuffer(s, dtype='uint8')
 
         img_rgba = buffer.reshape(height, width, 4)
         rgb, alpha = np.split(img_rgba, [3], axis=2)
-        return rgb.astype("uint8")
+        return rgb.astype('uint8')
 
 
 class Visualizer:
-    """
-    Visualizer that draws data about detection/segmentation on images.
+    """Visualizer that draws data about detection/segmentation on images.
 
     It contains methods like `draw_{text,box,circle,line,binary_mask,polygon}`
     that draw primitive objects to images, as well as high-level wrappers like
@@ -381,10 +375,10 @@ class Visualizer:
         """
         self.img = np.asarray(img_rgb).clip(0, 255).astype(np.uint8)
         if metadata is None:
-            metadata = MetadataCatalog.get("__nonexist__")
+            metadata = MetadataCatalog.get('__nonexist__')
         self.metadata = metadata
         self.output = VisImage(self.img, scale=scale)
-        self.cpu_device = torch.device("cpu")
+        self.cpu_device = torch.device('cpu')
 
         # too small texts are useless, therefore clamp to 9
         self._default_font_size = max(
@@ -394,8 +388,7 @@ class Visualizer:
         self.keypoint_threshold = _KEYPOINT_THRESHOLD
 
     def draw_instance_predictions(self, predictions):
-        """
-        Draw instance-level prediction results on an image.
+        """Draw instance-level prediction results on an image.
 
         Args:
             predictions (Instances): the output of an instance detection/segmentation
@@ -406,23 +399,23 @@ class Visualizer:
             output (VisImage): image object with visualizations.
         """
         boxes = predictions.pred_boxes if predictions.has(
-            "pred_boxes") else None
-        scores = predictions.scores if predictions.has("scores") else None
+            'pred_boxes') else None
+        scores = predictions.scores if predictions.has('scores') else None
         classes = predictions.pred_classes.tolist(
-        ) if predictions.has("pred_classes") else None
+        ) if predictions.has('pred_classes') else None
         labels = _create_text_labels(
-            classes, scores, self.metadata.get("thing_classes", None))
+            classes, scores, self.metadata.get('thing_classes', None))
         keypoints = predictions.pred_keypoints if predictions.has(
-            "pred_keypoints") else None
+            'pred_keypoints') else None
 
-        if predictions.has("pred_masks"):
+        if predictions.has('pred_masks'):
             masks = np.asarray(predictions.pred_masks)
             masks = [GenericMask(x, self.output.height,
                                  self.output.width) for x in masks]
         else:
             masks = None
 
-        if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get("thing_colors"):
+        if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get('thing_colors'):
             colors = [
                 self._jitter([x / 255 for x in self.metadata.thing_colors[c]]) for c in classes
             ]
@@ -435,7 +428,7 @@ class Visualizer:
             self.output.reset_image(
                 self._create_grayscale_image(
                     (predictions.pred_masks.any(dim=0) > 0).numpy()
-                    if predictions.has("pred_masks")
+                    if predictions.has('pred_masks')
                     else None
                 )
             )
@@ -452,8 +445,7 @@ class Visualizer:
         return self.output
 
     def draw_sem_seg(self, sem_seg, area_threshold=None, alpha=0.8):
-        """
-        Draw semantic segmentation predictions/labels.
+        """Draw semantic segmentation predictions/labels.
 
         Args:
             sem_seg (Tensor or ndarray): the segmentation of shape (H, W).
@@ -491,8 +483,7 @@ class Visualizer:
         return self.output
 
     def draw_panoptic_seg(self, panoptic_seg, segments_info, area_threshold=None, alpha=0.7):
-        """
-        Draw panoptic prediction annotations or results.
+        """Draw panoptic prediction annotations or results.
 
         Args:
             panoptic_seg (Tensor): of shape (height, width) where the values are ids for each
@@ -514,7 +505,7 @@ class Visualizer:
 
         # draw mask for all semantic segments first i.e. "stuff"
         for mask, sinfo in pred.semantic_masks():
-            category_idx = sinfo["category_id"]
+            category_idx = sinfo['category_id']
             try:
                 mask_color = [
                     x / 255 for x in self.metadata.stuff_colors[category_idx]]
@@ -536,15 +527,15 @@ class Visualizer:
         if len(all_instances) == 0:
             return self.output
         masks, sinfo = list(zip(*all_instances))
-        category_ids = [x["category_id"] for x in sinfo]
+        category_ids = [x['category_id'] for x in sinfo]
 
         try:
-            scores = [x["score"] for x in sinfo]
+            scores = [x['score'] for x in sinfo]
         except KeyError:
             scores = None
         labels = _create_text_labels(
             category_ids, scores, self.metadata.thing_classes, [
-                x.get("iscrowd", 0) for x in sinfo]
+                x.get('iscrowd', 0) for x in sinfo]
         )
 
         try:
@@ -561,8 +552,7 @@ class Visualizer:
     draw_panoptic_seg_predictions = draw_panoptic_seg  # backward compatibility
 
     def draw_dataset_dict(self, dic):
-        """
-        Draw annotations/segmentaions in Detectron2 Dataset format.
+        """Draw annotations/segmentaions in Detectron2 Dataset format.
 
         Args:
             dic (dict): annotation/segmentation data of one image, in Detectron2 Dataset format.
@@ -570,62 +560,62 @@ class Visualizer:
         Returns:
             output (VisImage): image object with visualizations.
         """
-        annos = dic.get("annotations", None)
+        annos = dic.get('annotations', None)
         if annos:
-            if "segmentation" in annos[0]:
-                masks = [x["segmentation"] for x in annos]
+            if 'segmentation' in annos[0]:
+                masks = [x['segmentation'] for x in annos]
             else:
                 masks = None
-            if "keypoints" in annos[0]:
-                keypts = [x["keypoints"] for x in annos]
+            if 'keypoints' in annos[0]:
+                keypts = [x['keypoints'] for x in annos]
                 keypts = np.array(keypts).reshape(len(annos), -1, 3)
             else:
                 keypts = None
 
             boxes = [
-                BoxMode.convert(x["bbox"], x["bbox_mode"], BoxMode.XYXY_ABS)
-                if len(x["bbox"]) == 4
-                else x["bbox"]
+                BoxMode.convert(x['bbox'], x['bbox_mode'], BoxMode.XYXY_ABS)
+                if len(x['bbox']) == 4
+                else x['bbox']
                 for x in annos
             ]
 
             colors = None
-            category_ids = [x["category_id"] for x in annos]
-            if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get("thing_colors"):
+            category_ids = [x['category_id'] for x in annos]
+            if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get('thing_colors'):
                 colors = [
                     self._jitter(
                         [x / 255 for x in self.metadata.thing_colors[c]])
                     for c in category_ids
                 ]
-            names = self.metadata.get("thing_classes", None)
+            names = self.metadata.get('thing_classes', None)
             labels = _create_text_labels(
                 category_ids,
                 scores=None,
                 class_names=names,
-                is_crowd=[x.get("iscrowd", 0) for x in annos],
+                is_crowd=[x.get('iscrowd', 0) for x in annos],
             )
             self.overlay_instances(
                 labels=labels, boxes=boxes, masks=masks, keypoints=keypts, assigned_colors=colors
             )
 
-        sem_seg = dic.get("sem_seg", None)
-        if sem_seg is None and "sem_seg_file_name" in dic:
-            with PathManager.open(dic["sem_seg_file_name"], "rb") as f:
+        sem_seg = dic.get('sem_seg', None)
+        if sem_seg is None and 'sem_seg_file_name' in dic:
+            with PathManager.open(dic['sem_seg_file_name'], 'rb') as f:
                 sem_seg = Image.open(f)
-                sem_seg = np.asarray(sem_seg, dtype="uint8")
+                sem_seg = np.asarray(sem_seg, dtype='uint8')
         if sem_seg is not None:
             self.draw_sem_seg(sem_seg, area_threshold=0, alpha=0.5)
 
-        pan_seg = dic.get("pan_seg", None)
-        if pan_seg is None and "pan_seg_file_name" in dic:
-            with PathManager.open(dic["pan_seg_file_name"], "rb") as f:
+        pan_seg = dic.get('pan_seg', None)
+        if pan_seg is None and 'pan_seg_file_name' in dic:
+            with PathManager.open(dic['pan_seg_file_name'], 'rb') as f:
                 pan_seg = Image.open(f)
                 pan_seg = np.asarray(pan_seg)
                 from panopticapi.utils import rgb2id
 
                 pan_seg = rgb2id(pan_seg)
         if pan_seg is not None:
-            segments_info = dic["segments_info"]
+            segments_info = dic['segments_info']
             pan_seg = torch.tensor(pan_seg)
             self.draw_panoptic_seg(
                 pan_seg, segments_info, area_threshold=0, alpha=0.5)
@@ -732,7 +722,7 @@ class Visualizer:
                     x0, y0, x1, y1 = boxes[i]
                     # if drawing boxes, put text on the box corner.
                     text_pos = (x0, y0)
-                    horiz_align = "left"
+                    horiz_align = 'left'
                 elif masks is not None:
                     # skip small mask without polygon
                     if len(masks[i].polygons) == 0:
@@ -743,7 +733,7 @@ class Visualizer:
                     # draw text in the center (defined by median) when box is not drawn
                     # median is less sensitive to outliers.
                     text_pos = np.median(masks[i].mask.nonzero(), axis=1)[::-1]
-                    horiz_align = "center"
+                    horiz_align = 'center'
                 else:
                     # drawing the box confidence for keypoints isn't very useful.
                     continue
@@ -823,10 +813,9 @@ class Visualizer:
         return self.output
 
     def draw_and_connect_keypoints(self, keypoints):
-        """
-        Draws keypoints of an instance and follows the rules for keypoint connections
-        to draw lines between appropriate keypoints. This follows color heuristics for
-        line color.
+        """Draws keypoints of an instance and follows the rules for keypoint
+        connections to draw lines between appropriate keypoints. This follows
+        color heuristics for line color.
 
         Args:
             keypoints (Tensor): a tensor of shape (K, 3), where K is the number of keypoints
@@ -836,7 +825,7 @@ class Visualizer:
             output (VisImage): image object with visualizations.
         """
         visible = {}
-        keypoint_names = self.metadata.get("keypoint_names")
+        keypoint_names = self.metadata.get('keypoint_names')
         for idx, keypoint in enumerate(keypoints):
             # draw keypoint
             x, y, prob = keypoint
@@ -846,7 +835,7 @@ class Visualizer:
                     keypoint_name = keypoint_names[idx]
                     visible[keypoint_name] = (x, y)
 
-        if self.metadata.get("keypoint_connection_rules"):
+        if self.metadata.get('keypoint_connection_rules'):
             for kp0, kp1, color in self.metadata.keypoint_connection_rules:
                 if kp0 in visible and kp1 in visible:
                     x0, y0 = visible[kp0]
@@ -858,23 +847,23 @@ class Visualizer:
         # Note that this strategy is specific to person keypoints.
         # For other keypoints, it should just do nothing
         try:
-            ls_x, ls_y = visible["left_shoulder"]
-            rs_x, rs_y = visible["right_shoulder"]
+            ls_x, ls_y = visible['left_shoulder']
+            rs_x, rs_y = visible['right_shoulder']
             mid_shoulder_x, mid_shoulder_y = (
                 ls_x + rs_x) / 2, (ls_y + rs_y) / 2
         except KeyError:
             pass
         else:
             # draw line from nose to mid-shoulder
-            nose_x, nose_y = visible.get("nose", (None, None))
+            nose_x, nose_y = visible.get('nose', (None, None))
             if nose_x is not None:
                 self.draw_line([nose_x, mid_shoulder_x], [
                                nose_y, mid_shoulder_y], color=_RED)
 
             try:
                 # draw line from mid-shoulder to mid-hip
-                lh_x, lh_y = visible["left_hip"]
-                rh_x, rh_y = visible["right_hip"]
+                lh_x, lh_y = visible['left_hip']
+                rh_x, rh_y = visible['right_hip']
             except KeyError:
                 pass
             else:
@@ -893,8 +882,8 @@ class Visualizer:
         position,
         *,
         font_size=None,
-        color="g",
-        horizontal_alignment="center",
+        color='g',
+        horizontal_alignment='center',
         rotation=0,
     ):
         """
@@ -924,10 +913,10 @@ class Visualizer:
             y,
             text,
             size=font_size * self.output.scale,
-            family="sans-serif",
-            bbox={"facecolor": "black", "alpha": 0.8,
-                  "pad": 0.7, "edgecolor": "none"},
-            verticalalignment="top",
+            family='sans-serif',
+            bbox={'facecolor': 'black', 'alpha': 0.8,
+                  'pad': 0.7, 'edgecolor': 'none'},
+            verticalalignment='top',
             horizontalalignment=horizontal_alignment,
             color=color,
             zorder=10,
@@ -935,7 +924,7 @@ class Visualizer:
         )
         return self.output
 
-    def draw_box(self, box_coord, alpha=0.5, edge_color="g", line_style="-"):
+    def draw_box(self, box_coord, alpha=0.5, edge_color='g', line_style='-'):
         """
         Args:
             box_coord (tuple): a tuple containing x0, y0, x1, y1 coordinates, where x0 and y0
@@ -970,10 +959,9 @@ class Visualizer:
         return self.output
 
     def draw_rotated_box_with_label(
-        self, rotated_box, alpha=0.5, edge_color="g", line_style="-", label=None
+        self, rotated_box, alpha=0.5, edge_color='g', line_style='-', label=None
     ):
-        """
-        Draw a rotated box with label on its top-left corner.
+        """Draw a rotated box with label on its top-left corner.
 
         Args:
             rotated_box (tuple): a tuple containing (cnt_x, cnt_y, w, h, angle),
@@ -1010,7 +998,7 @@ class Visualizer:
                 [rotated_rect[k][0], rotated_rect[j][0]],
                 [rotated_rect[k][1], rotated_rect[j][1]],
                 color=edge_color,
-                linestyle="--" if k == 1 else line_style,
+                linestyle='--' if k == 1 else line_style,
                 linewidth=linewidth,
             )
 
@@ -1048,7 +1036,7 @@ class Visualizer:
         )
         return self.output
 
-    def draw_line(self, x_data, y_data, color, linestyle="-", linewidth=None):
+    def draw_line(self, x_data, y_data, color, linestyle='-', linewidth=None):
         """
         Args:
             x_data (list[int]): a list containing x values of all the points being drawn.
@@ -1103,7 +1091,7 @@ class Visualizer:
         color = mplc.to_rgb(color)
 
         has_valid_segment = False
-        binary_mask = binary_mask.astype("uint8")  # opencv needs uint8
+        binary_mask = binary_mask.astype('uint8')  # opencv needs uint8
         mask = GenericMask(binary_mask, self.output.height, self.output.width)
         shape2d = (binary_mask.shape[0], binary_mask.shape[1])
 
@@ -1121,9 +1109,9 @@ class Visualizer:
         else:
             # TODO: Use Path/PathPatch to draw vector graphics:
             # https://stackoverflow.com/questions/8919719/how-to-plot-a-complex-polygon
-            rgba = np.zeros(shape2d + (4,), dtype="float32")
+            rgba = np.zeros(shape2d + (4,), dtype='float32')
             rgba[:, :, :3] = color
-            rgba[:, :, 3] = (mask.mask == 1).astype("float32") * alpha
+            rgba[:, :, 3] = (mask.mask == 1).astype('float32') * alpha
             has_valid_segment = True
             self.output.ax.imshow(rgba, extent=(
                 0, self.output.width, self.output.height, 0))
@@ -1185,8 +1173,8 @@ class Visualizer:
     """
 
     def _jitter(self, color):
-        """
-        Randomly modifies given color to produce a slightly different color than the color given.
+        """Randomly modifies given color to produce a slightly different color
+        than the color given.
 
         Args:
             color (tuple[double]): a tuple of 3 elements, containing the RGB values of the color
@@ -1204,20 +1192,19 @@ class Visualizer:
         return tuple(res)
 
     def _create_grayscale_image(self, mask=None):
-        """
-        Create a grayscale version of the original image.
+        """Create a grayscale version of the original image.
+
         The colors in masked area, if given, will be kept.
         """
-        img_bw = self.img.astype("f4").mean(axis=2)
+        img_bw = self.img.astype('f4').mean(axis=2)
         img_bw = np.stack([img_bw] * 3, axis=2)
         if mask is not None:
             img_bw[mask] = self.img[mask]
         return img_bw
 
     def _change_color_brightness(self, color, brightness_factor):
-        """
-        Depending on the brightness_factor, gives a lighter or darker color i.e. a color with
-        less or more saturation than the original color.
+        """Depending on the brightness_factor, gives a lighter or darker color
+        i.e. a color with less or more saturation than the original color.
 
         Args:
             color: color of the polygon. Refer to `matplotlib.colors` for a full list of
@@ -1251,8 +1238,8 @@ class Visualizer:
             return np.asarray(boxes)
 
     def _convert_masks(self, masks_or_polygons):
-        """
-        Convert different format of masks or polygons to a tuple of masks and polygons.
+        """Convert different format of masks or polygons to a tuple of masks
+        and polygons.
 
         Returns:
             list[GenericMask]:

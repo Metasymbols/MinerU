@@ -1,7 +1,7 @@
 import os
 
 
-def sanitize_filename(filename, replacement="_"):
+def sanitize_filename(filename, replacement='_'):
     if os.name == 'nt':
         invalid_chars = '<>:"|?*'
 

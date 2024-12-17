@@ -1,6 +1,7 @@
 # Copyright (c) Opendatalab. All rights reserved.
-import torch
 import gc
+
+import torch
 
 
 def clean_memory():

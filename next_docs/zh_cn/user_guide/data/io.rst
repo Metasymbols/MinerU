@@ -18,4 +18,3 @@ IO
     class SomeWriter(IOWriter):
         def write(self, path: str, data: bytes) -> None:
             pass
-        

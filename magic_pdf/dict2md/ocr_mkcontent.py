@@ -1,6 +1,7 @@
 import re
 
 from loguru import logger
+
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.config.ocr_content_type import BlockType, ContentType
 from magic_pdf.libs.commons import join_path

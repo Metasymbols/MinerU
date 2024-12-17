@@ -1,11 +1,13 @@
 import json
-from flask import url_for, request
+
+from common.custom_response import generate_response
+from flask import request, url_for
 from flask_restful import Resource
 from sqlalchemy import func
+
 from ..extentions import db
-from .models import AnalysisTask, AnalysisPdf
 from .ext import task_state_map
-from common.custom_response import generate_response
+from .models import AnalysisPdf, AnalysisTask
 
 
 class TaskView(Resource):

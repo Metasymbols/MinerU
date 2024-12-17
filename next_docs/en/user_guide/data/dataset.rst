@@ -1,18 +1,18 @@
 
 
-Dataset 
+Dataset
 ===========
 
 
-Import Classes 
+Import Classes
 -----------------
 
-Dataset 
+Dataset
 ^^^^^^^^
 
 Each pdfs or image will form one ``Dataset``. As we all know, Pdf has two categories, :ref:`digital_method_section` or :ref:`ocr_method_section`.
 Will get ``ImageDataset`` which is subclass of ``Dataset`` with images and get ``PymuDocDataset`` from pdf files.
-The difference between ``ImageDataset`` and ``PymuDocDataset`` is that ``ImageDataset`` only support ``OCR`` parse method, 
+The difference between ``ImageDataset`` and ``PymuDocDataset`` is that ``ImageDataset`` only support ``OCR`` parse method,
 while ``PymuDocDataset`` support both ``OCR`` and ``TXT``
 
 .. note::
@@ -25,16 +25,15 @@ Pdf Parse Methods
 ------------------
 
 .. _ocr_method_section:
-OCR 
+OCR
 ^^^^
 Extract chars via ``Optical Character Recognition`` technical.
 
 .. _digital_method_section:
 TXT
 ^^^^^^^^
-Extract chars via third-party library, currently we use ``pymupdf``. 
+Extract chars via third-party library, currently we use ``pymupdf``.
 
 
 
 Check :doc:`../../api/dataset` for more details
-

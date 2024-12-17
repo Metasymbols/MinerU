@@ -1,15 +1,15 @@
-import os
 import json
+import os
 
 import torch
+from PIL import Image
 from torch.utils.data.dataset import Dataset
 from torchvision import transforms
-from PIL import Image
 
 from .image_utils import Compose, RandomResizedCropAndInterpolationWithTwoPic
 
 XFund_label2ids = {
-    "O":0,
+    'O':0,
     'B-HEADER':1,
     'I-HEADER':2,
     'B-QUESTION':3,
@@ -61,7 +61,7 @@ class xfund_dataset(Dataset):
             data_file,
     ):
         # re-org data format
-        total_data = {"id": [], "lines": [], "bboxes": [], "ner_tags": [], "image_path": []}
+        total_data = {'id': [], 'lines': [], 'bboxes': [], 'ner_tags': [], 'image_path': []}
         for i in range(len(data_file['documents'])):
             width, height = data_file['documents'][i]['img']['width'], data_file['documents'][i]['img'][
                 'height']
@@ -88,7 +88,7 @@ class xfund_dataset(Dataset):
 
                 cur_label = total_data['ner_tags'][i][j].upper()
                 if cur_label == 'OTHER':
-                    cur_labels = ["O"] * len(cur_input_ids)
+                    cur_labels = ['O'] * len(cur_input_ids)
                     for k in range(len(cur_labels)):
                         cur_labels[k] = self.label2ids[cur_labels[k]]
                 else:
@@ -126,7 +126,7 @@ class xfund_dataset(Dataset):
                 cur_position_ids = self.get_position_ids(cur_segment_ids)
                 segment_ids.append(cur_segment_ids)
                 position_ids.append(cur_position_ids)
-                image_path.append(os.path.join(self.args.data_dir, "images", total_data['image_path'][i]))
+                image_path.append(os.path.join(self.args.data_dir, 'images', total_data['image_path'][i]))
 
                 start = end
                 cur_iter += 1
@@ -171,7 +171,7 @@ class xfund_dataset(Dataset):
         ])
 
         data_file = json.load(
-            open(os.path.join(args.data_dir, "{}.{}.json".format(self.cur_la, 'train' if mode == 'train' else 'val')),
+            open(os.path.join(args.data_dir, '{}.{}.json'.format(self.cur_la, 'train' if mode == 'train' else 'val')),
                  'r'))
 
         self.feature = self.load_data(data_file)
@@ -180,12 +180,12 @@ class xfund_dataset(Dataset):
         return len(self.feature['input_ids'])
 
     def __getitem__(self, index):
-        input_ids = self.feature["input_ids"][index]
+        input_ids = self.feature['input_ids'][index]
 
         # attention_mask = self.feature["attention_mask"][index]
         attention_mask = [1] * len(input_ids)
-        labels = self.feature["labels"][index]
-        bbox = self.feature["bbox"][index]
+        labels = self.feature['labels'][index]
+        bbox = self.feature['bbox'][index]
         segment_ids = self.feature['segment_ids'][index]
         position_ids = self.feature['position_ids'][index]
 
@@ -196,13 +196,13 @@ class xfund_dataset(Dataset):
         assert len(input_ids) == len(attention_mask) == len(labels) == len(bbox) == len(segment_ids)
 
         res = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": labels,
-            "bbox": bbox,
-            "segment_ids": segment_ids,
-            "position_ids": position_ids,
-            "images": patch,
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+            'bbox': bbox,
+            'segment_ids': segment_ids,
+            'position_ids': position_ids,
+            'images': patch,
         }
         return res
 

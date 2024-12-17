@@ -1,13 +1,14 @@
-import torchvision.transforms.functional as F
-import warnings
 import math
 import random
-import numpy as np
-from PIL import Image
-import torch
+import warnings
 
+import numpy as np
+import torch
+import torchvision.transforms.functional as F
 from detectron2.data.detection_utils import read_image
 from detectron2.data.transforms import ResizeTransform, TransformList
+from PIL import Image
+
 
 def normalize_bbox(bbox, size):
     return [
@@ -19,7 +20,7 @@ def normalize_bbox(bbox, size):
 
 
 def load_image(image_path):
-    image = read_image(image_path, format="BGR")
+    image = read_image(image_path, format='BGR')
     h = image.shape[0]
     w = image.shape[1]
     img_trans = TransformList([ResizeTransform(h=h, w=w, new_h=224, new_w=224)])
@@ -134,8 +135,8 @@ def _pil_interp(method):
 
 
 class Compose:
-    """Composes several transforms together. This transform does not support torchscript.
-    Please, see the note below.
+    """Composes several transforms together. This transform does not support
+    torchscript. Please, see the note below.
 
     Args:
         transforms (list of ``Transform`` objects): list of transforms to compose.
@@ -158,7 +159,6 @@ class Compose:
 
         Make sure to use only scriptable transformations, i.e. that work with ``torch.Tensor``, does not require
         `lambda` functions or ``PIL.Image``.
-
     """
 
     def __init__(self, transforms):
@@ -171,7 +171,9 @@ class Compose:
 
 
 class RandomResizedCropAndInterpolationWithTwoPic:
-    """Crop the given PIL Image to random size and aspect ratio with random interpolation.
+    """Crop the given PIL Image to random size and aspect ratio with random
+    interpolation.
+
     A crop of random size (default: of 0.08 to 1.0) of the original size and a random
     aspect ratio (default: of 3/4 to 4/3) of the original aspect ratio is made. This crop
     is finally resized to given size.
@@ -197,7 +199,7 @@ class RandomResizedCropAndInterpolationWithTwoPic:
         else:
             self.second_size = None
         if (scale[0] > scale[1]) or (ratio[0] > ratio[1]):
-            warnings.warn("range should be of kind (min, max)")
+            warnings.warn('range should be of kind (min, max)')
 
         self.interpolation = _pil_interp(interpolation)
         self.second_interpolation = _pil_interp(second_interpolation)
@@ -207,6 +209,7 @@ class RandomResizedCropAndInterpolationWithTwoPic:
     @staticmethod
     def get_params(img, scale, ratio):
         """Get parameters for ``crop`` for a random sized crop.
+
         Args:
             img (PIL Image): Image to be cropped.
             scale (tuple): range of size of the origin size cropped

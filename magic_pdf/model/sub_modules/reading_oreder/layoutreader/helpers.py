@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Dict
+from typing import Dict, List
 
 import torch
 from transformers import LayoutLMv3ForTokenClassification
@@ -19,10 +19,10 @@ class DataCollator:
 
         # clip bbox and labels to max length, build input_ids and attention_mask
         for feature in features:
-            _bbox = feature["source_boxes"]
+            _bbox = feature['source_boxes']
             if len(_bbox) > MAX_LEN:
                 _bbox = _bbox[:MAX_LEN]
-            _labels = feature["target_index"]
+            _labels = feature['target_index']
             if len(_labels) > MAX_LEN:
                 _labels = _labels[:MAX_LEN]
             _input_ids = [UNK_TOKEN_ID] * len(_bbox)
@@ -51,15 +51,15 @@ class DataCollator:
             )
 
         ret = {
-            "bbox": torch.tensor(bbox),
-            "attention_mask": torch.tensor(attention_mask),
-            "labels": torch.tensor(labels),
-            "input_ids": torch.tensor(input_ids),
+            'bbox': torch.tensor(bbox),
+            'attention_mask': torch.tensor(attention_mask),
+            'labels': torch.tensor(labels),
+            'input_ids': torch.tensor(input_ids),
         }
         # set label > MAX_LEN to -100, because original labels may be > MAX_LEN
-        ret["labels"][ret["labels"] > MAX_LEN] = -100
+        ret['labels'][ret['labels'] > MAX_LEN] = -100
         # set label > 0 to label-1, because original labels are 1-indexed
-        ret["labels"][ret["labels"] > 0] -= 1
+        ret['labels'][ret['labels'] > 0] -= 1
         return ret
 
 
@@ -68,9 +68,9 @@ def boxes2inputs(boxes: List[List[int]]) -> Dict[str, torch.Tensor]:
     input_ids = [CLS_TOKEN_ID] + [UNK_TOKEN_ID] * len(boxes) + [EOS_TOKEN_ID]
     attention_mask = [1] + [1] * len(boxes) + [1]
     return {
-        "bbox": torch.tensor([bbox]),
-        "attention_mask": torch.tensor([attention_mask]),
-        "input_ids": torch.tensor([input_ids]),
+        'bbox': torch.tensor([bbox]),
+        'attention_mask': torch.tensor([attention_mask]),
+        'input_ids': torch.tensor([input_ids]),
     }
 
 
@@ -87,8 +87,7 @@ def prepare_inputs(
 
 
 def parse_logits(logits: torch.Tensor, length: int) -> List[int]:
-    """
-    parse logits to orders
+    """parse logits to orders.
 
     :param logits: logits from model
     :param length: input length

@@ -1,8 +1,8 @@
 import time
 
 import torch
-from PIL import Image
 from loguru import logger
+from PIL import Image
 
 from magic_pdf.libs.clean_memory import clean_memory
 
@@ -31,7 +31,7 @@ def get_res_list_from_layout_res(layout_res):
     for res in layout_res:
         if int(res['category_id']) in [13, 14]:
             single_page_mfdetrec_res.append({
-                "bbox": [int(res['poly'][0]), int(res['poly'][1]),
+                'bbox': [int(res['poly'][0]), int(res['poly'][1]),
                          int(res['poly'][4]), int(res['poly'][5])],
             })
         elif int(res['category_id']) in [0, 1, 2, 4, 6, 7]:
@@ -47,7 +47,7 @@ def clean_vram(device, vram_threshold=8):
         gc_start = time.time()
         clean_memory()
         gc_time = round(time.time() - gc_start, 2)
-        logger.info(f"gc time: {gc_time}")
+        logger.info(f'gc time: {gc_time}')
 
 
 def get_vram(device):

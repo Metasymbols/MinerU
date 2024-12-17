@@ -1,8 +1,7 @@
-"""
-clean coverage
-"""
+"""clean coverage."""
 import os
 import shutil
+
 
 def delete_file(path):
     """delete file."""
@@ -20,6 +19,6 @@ def delete_file(path):
         except TypeError as e:
             print(f"Error deleting directory '{path}': {e}")
 
-if __name__ == "__main__":
-    delete_file("htmlcov/")
+if __name__ == '__main__':
+    delete_file('htmlcov/')
     #delete_file(".coverage")

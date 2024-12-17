@@ -59,4 +59,3 @@ directory. The output file list is as follows:
    :class: tip
 
    For more information about the output files, please refer to the :doc:`../tutorial/output_file_description`
-

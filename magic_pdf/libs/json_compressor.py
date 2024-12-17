@@ -1,15 +1,14 @@
-import json
-import brotli
 import base64
+import json
+
+import brotli
 
 
 class JsonCompressor:
 
     @staticmethod
     def compress_json(data):
-        """
-        Compress a json object and encode it with base64
-        """
+        """Compress a json object and encode it with base64."""
         json_str = json.dumps(data)
         json_bytes = json_str.encode('utf-8')
         compressed = brotli.compress(json_bytes, quality=6)
@@ -18,9 +17,7 @@ class JsonCompressor:
 
     @staticmethod
     def decompress_json(compressed_str):
-        """
-        Decode the base64 string and decompress the json object
-        """
+        """Decode the base64 string and decompress the json object."""
         compressed = base64.b64decode(compressed_str.encode('utf-8'))  # convert string to bytes
         decompressed_bytes = brotli.decompress(compressed)
         json_str = decompressed_bytes.decode('utf-8')

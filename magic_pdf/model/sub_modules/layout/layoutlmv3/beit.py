@@ -1,4 +1,4 @@
-""" Vision Transformer (ViT) in PyTorch
+"""Vision Transformer (ViT) in PyTorch.
 
 A PyTorch implement of Vision Transformers as described in
 'An Image Is Worth 16 x 16 Words: Transformers for Image Recognition at Scale' - https://arxiv.org/abs/2010.11929
@@ -42,8 +42,8 @@ def _cfg(url='', **kwargs):
 
 
 class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-    """
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of
+    residual blocks)."""
 
     def __init__(self, drop_prob=None):
         super(DropPath, self).__init__()
@@ -129,7 +129,7 @@ class Attention(nn.Module):
             relative_position_index[0:, 0] = self.num_relative_distance - 2
             relative_position_index[0, 0] = self.num_relative_distance - 1
 
-            self.register_buffer("relative_position_index",
+            self.register_buffer('relative_position_index',
                                  relative_position_index)
 
             # trunc_normal_(self.relative_position_bias_table, std=.0)
@@ -267,8 +267,7 @@ class Block(nn.Module):
 
 
 class PatchEmbed(nn.Module):
-    """ Image to Patch Embedding
-    """
+    """Image to Patch Embedding."""
 
     def __init__(self, img_size=[224, 224], patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
@@ -308,9 +307,8 @@ class PatchEmbed(nn.Module):
 
 
 class HybridEmbed(nn.Module):
-    """ CNN Feature Map Embedding
-    Extract feature map from CNN, flatten, project to embedding dim.
-    """
+    """CNN Feature Map Embedding Extract feature map from CNN, flatten, project
+    to embedding dim."""
 
     def __init__(self, backbone, img_size=[224, 224], feature_size=None, in_chans=3, embed_dim=768):
         super().__init__()
@@ -377,7 +375,7 @@ class RelativePositionBias(nn.Module):
         relative_position_index[0:, 0] = self.num_relative_distance - 2
         relative_position_index[0, 0] = self.num_relative_distance - 1
 
-        self.register_buffer("relative_position_index",
+        self.register_buffer('relative_position_index',
                              relative_position_index)
 
         # trunc_normal_(self.relative_position_bias_table, std=.02)
@@ -443,8 +441,7 @@ class RelativePositionBias(nn.Module):
 
 
 class BEiT(nn.Module):
-    """ Vision Transformer with support for patch or hybrid CNN input stage
-    """
+    """Vision Transformer with support for patch or hybrid CNN input stage."""
 
     def __init__(self,
                  img_size=[224, 224],
@@ -725,11 +722,11 @@ def dit_large_patch16(pretrained=False, **kwargs):
 
 if __name__ == '__main__':
     model = BEiT(use_checkpoint=True, use_shared_rel_pos_bias=True)
-    model = model.to("cuda:0")
-    input1 = torch.rand(2, 3, 512, 762).to("cuda:0")
-    input2 = torch.rand(2, 3, 800, 1200).to("cuda:0")
-    input3 = torch.rand(2, 3, 720, 1000).to("cuda:0")
+    model = model.to('cuda:0')
+    input1 = torch.rand(2, 3, 512, 762).to('cuda:0')
+    input2 = torch.rand(2, 3, 800, 1200).to('cuda:0')
+    input3 = torch.rand(2, 3, 720, 1000).to('cuda:0')
     output1 = model(input1)
     output2 = model(input2)
     output3 = model(input3)
-    print("all done")
+    print('all done')

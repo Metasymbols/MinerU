@@ -1,21 +1,21 @@
-from magic_pdf.model.operators import InferenceResult
-from magic_pdf.model.model_list import MODEL
-from magic_pdf.libs.config_reader import (get_device, get_formula_config,
-                                          get_layout_config,
-                                          get_local_models_dir,
-                                          get_table_recog_config)
-from magic_pdf.libs.clean_memory import clean_memory
-from magic_pdf.data.dataset import Dataset
-import magic_pdf.model as model_config
 import os
 import time
 
 import fitz
+import magic_pdf.model as model_config
 import numpy as np
-from loguru import logger
-
 # 关闭paddle的信号处理
 import paddle
+from loguru import logger
+from magic_pdf.data.dataset import Dataset
+from magic_pdf.libs.clean_memory import clean_memory
+from magic_pdf.libs.config_reader import (get_device, get_formula_config,
+                                          get_layout_config,
+                                          get_local_models_dir,
+                                          get_table_recog_config)
+from magic_pdf.model.model_list import MODEL
+from magic_pdf.model.operators import InferenceResult
+
 paddle.disable_signal_handler()
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
@@ -203,10 +203,10 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
     doc_analyze_start = time.time()
 
     if end_page_id is None:
-        end_page_id = len(dataset)
+        end_page_id = len(Dataset)
 
-    for index in range(len(dataset)):
-        page_data = dataset.get_page(index)
+    for index in range(len(Dataset)):
+        page_data = Dataset.get_page(index)
         img_dict = page_data.get_image()
         img = img_dict['img']
         page_width = img_dict['width']
@@ -237,4 +237,4 @@ def doc_analyze(pdf_bytes: bytes, ocr: bool = False, show_log: bool = False,
         f' speed: {doc_analyze_speed} pages/second'
     )
 
-    return InferenceResult(model_json, dataset)
+    return InferenceResult(model_json, Dataset)

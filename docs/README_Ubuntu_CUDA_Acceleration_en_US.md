@@ -8,7 +8,7 @@ nvidia-smi
 
 If you see information similar to the following, it means that the NVIDIA drivers are already installed, and you can skip Step 2.
 
-> [!NOTE]
+> \[!NOTE\]
 > Notice:`CUDA Version` should be >= 12.1, If the displayed version number is less than 12.1, please upgrade the driver.
 
 ```plaintext
@@ -65,7 +65,8 @@ conda activate MinerU
 ```sh
 pip install -U magic-pdf[full] --extra-index-url https://wheels.myhloli.com
 ```
-> [!IMPORTANT]
+
+> \[!IMPORTANT\]
 > After installation, make sure to check the version of `magic-pdf` using the following command:
 >
 > ```sh
@@ -76,18 +77,15 @@ pip install -U magic-pdf[full] --extra-index-url https://wheels.myhloli.com
 
 ### 6. Download Models
 
-
 Refer to detailed instructions on [how to download model files](how_to_download_models_en.md).
-
 
 ## 7. Understand the Location of the Configuration File
 
 After completing the [6. Download Models](#6-download-models) step, the script will automatically generate a `magic-pdf.json` file in the user directory and configure the default model path.
 You can find the `magic-pdf.json` file in your user directory.
 
-> [!TIP]
+> \[!TIP\]
 > The user directory for Linux is "/home/username".
-
 
 ### 8. First Run
 

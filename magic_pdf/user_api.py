@@ -9,13 +9,13 @@
 
 from loguru import logger
 
+from magic_pdf.config.constants import PARSE_TYPE_OCR, PARSE_TYPE_TXT
 from magic_pdf.data.data_reader_writer import DataWriter
 from magic_pdf.data.dataset import Dataset
 from magic_pdf.libs.version import __version__
 from magic_pdf.model.doc_analyze_by_custom_model import doc_analyze
 from magic_pdf.pdf_parse_by_ocr import parse_pdf_by_ocr
 from magic_pdf.pdf_parse_by_txt import parse_pdf_by_txt
-from magic_pdf.config.constants import PARSE_TYPE_TXT, PARSE_TYPE_OCR
 
 
 def parse_txt_pdf(

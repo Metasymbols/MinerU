@@ -1,12 +1,11 @@
-"""
-Calculate simscore, refer to (https://github.com/VikParuchuri/marker?tab=readme-ov-file)
-"""
+"""Calculate simscore, refer to
+(https://github.com/VikParuchuri/marker?tab=readme-ov-file)"""
 import math
-
-from rapidfuzz import fuzz
 import re
-import regex
 from statistics import mean
+
+import regex
+from rapidfuzz import fuzz
 
 CHUNK_MIN_CHARS = 25
 

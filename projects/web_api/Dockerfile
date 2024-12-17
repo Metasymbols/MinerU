@@ -36,7 +36,7 @@ RUN apt-get update && \
         libgl1 \
         libglib2.0-0 \
         && rm -rf /var/lib/apt/lists/*
-        
+
 # RUN unset http_proxy && unset https_proxy
 
 # Set Python 3.10 as the default python3
@@ -63,7 +63,7 @@ RUN /bin/bash -c "source /opt/mineru_venv/bin/activate && \
 # Copy the configuration file template and set up the model directory
 COPY magic-pdf.template.json /root/magic-pdf.json
 ADD models /opt/models
-ADD .paddleocr /root/.paddleocr 
+ADD .paddleocr /root/.paddleocr
 ADD app.py /root/app.py
 
 WORKDIR /root

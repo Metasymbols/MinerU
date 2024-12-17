@@ -101,5 +101,3 @@ Additional Notes
    additional_notes/known_issues
    additional_notes/faq
    additional_notes/glossary
-
-

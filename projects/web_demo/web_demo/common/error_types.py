@@ -1,13 +1,14 @@
 import json
+
 from flask import request
 from werkzeug.exceptions import HTTPException
 
 
 class ApiException(HTTPException):
-    """API错误基类"""
+    """API错误基类."""
     code = 500
     msg = 'Sorry, we made a mistake Σ(っ °Д °;)っ'
-    msgZH = ""
+    msgZH = ''
     error_code = 999
 
     def __init__(self, msg=None, msgZH=None, code=None, error_code=None, headers=None):
@@ -23,7 +24,7 @@ class ApiException(HTTPException):
 
     @staticmethod
     def get_error_url():
-        """获取出错路由和请求方式"""
+        """获取出错路由和请求方式."""
         method = request.method
         full_path = str(request.full_path)
         main_path = full_path.split('?')[0]
@@ -31,7 +32,7 @@ class ApiException(HTTPException):
         return res
 
     def get_body(self, environ=None, scope=None):
-        """异常返回信息"""
+        """异常返回信息."""
         body = dict(
             msg=self.msg,
             error_code=self.error_code,
@@ -41,5 +42,5 @@ class ApiException(HTTPException):
         return text
 
     def get_headers(self, environ=None, scope=None):
-        """异常返回格式"""
-        return [("Content-Type", "application/json")]
+        """异常返回格式."""
+        return [('Content-Type', 'application/json')]

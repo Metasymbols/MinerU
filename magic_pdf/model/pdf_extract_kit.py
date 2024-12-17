@@ -182,7 +182,7 @@ class CustomPEKModel:
             img_pil = Image.fromarray(image)
             width, height = img_pil.size
             # logger.info(f'width: {width}, height: {height}')
-            input_res = {"poly":[0,0,width,0,width,height,0,height]}
+            input_res = {'poly':[0,0,width,0,width,height,0,height]}
             new_image, useful_list = crop_img(input_res, img_pil, crop_paste_x=width//2, crop_paste_y=0)
             paste_x, paste_y, xmin, ymin, xmax, ymax, new_width, new_height = useful_list
             layout_res = self.layout_model.predict(new_image)
@@ -246,9 +246,9 @@ class CustomPEKModel:
 
         ocr_cost = round(time.time() - ocr_start, 2)
         if self.apply_ocr:
-            logger.info(f"ocr time: {ocr_cost}")
+            logger.info(f'ocr time: {ocr_cost}')
         else:
-            logger.info(f"det time: {ocr_cost}")
+            logger.info(f'det time: {ocr_cost}')
 
         # 表格识别 table recognition
         if self.apply_table:

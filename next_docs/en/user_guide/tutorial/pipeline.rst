@@ -4,7 +4,7 @@ Pipeline
 ==========
 
 
-Minimal Example 
+Minimal Example
 ^^^^^^^^^^^^^^^^^
 
 .. code:: python
@@ -43,7 +43,7 @@ Minimal Example
 Running the above code will result in the following
 
 
-.. code:: bash 
+.. code:: bash
 
     output/
     ├── abc.md
@@ -53,7 +53,7 @@ Running the above code will result in the following
 Excluding the setup of the environment, such as creating directories and importing dependencies, the actual code snippet for converting pdf to markdown is as follows
 
 
-.. code:: python 
+.. code:: python
 
     # read bytes
     reader1 = FileBasedDataReader("")
@@ -72,7 +72,7 @@ The ``PipeResult`` object, upon executing ``dump_md``, generates a ``markdown`` 
 The pipeline execution process is illustrated in the following diagram
 
 
-.. image:: ../../_static/image/pipeline.drawio.svg 
+.. image:: ../../_static/image/pipeline.drawio.svg
 
 .. raw:: html
 
@@ -93,7 +93,7 @@ These stages are linked together through methods like ``apply``, ``doc_analyze``
 Pipeline Composition
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python 
+.. code:: python
 
     class Dataset(ABC):
         @abstractmethod
@@ -147,11 +147,11 @@ Pipeline Composition
             return proc(copy.deepcopy(self._pipe_res), *args, **kwargs)
 
 
-The ``Dataset``, ``InferenceResult``, and ``PipeResult`` classes all have an ``apply`` method, which can be used to chain different stages of the computation. 
+The ``Dataset``, ``InferenceResult``, and ``PipeResult`` classes all have an ``apply`` method, which can be used to chain different stages of the computation.
 As shown below, ``MinerU`` provides a set of methods to compose these classes.
 
 
-.. code:: python 
+.. code:: python
 
     # proc
     ## Create Dataset Instance

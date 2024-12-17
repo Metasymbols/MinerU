@@ -6,8 +6,11 @@ Reference: https://huggingface.co/datasets/pierresi/cord/blob/main/cord.py
 import json
 import os
 from pathlib import Path
+
 import datasets
+
 from .image_utils import load_image, normalize_bbox
+
 logger = datasets.logging.get_logger(__name__)
 _CITATION = """\
 @article{park2019cord,
@@ -24,10 +27,10 @@ https://github.com/clovaai/cord/
 def quad_to_box(quad):
     # test 87 is wrongly annotated
     box = (
-        max(0, quad["x1"]),
-        max(0, quad["y1"]),
-        quad["x3"],
-        quad["y3"]
+        max(0, quad['x1']),
+        max(0, quad['y1']),
+        quad['x3'],
+        quad['y3']
     )
     if box[3] < box[1]:
         bbox = list(box)
@@ -49,8 +52,8 @@ def _get_drive_url(url):
     return base_url + split_url[5]
 
 _URLS = [
-    _get_drive_url("https://drive.google.com/file/d/1MqhTbcj-AHXOqYoeoh12aRUwIprzTJYI/"),
-    _get_drive_url("https://drive.google.com/file/d/1wYdp5nC9LnHQZ2FcmOoC0eClyWvcuARU/")
+    _get_drive_url('https://drive.google.com/file/d/1MqhTbcj-AHXOqYoeoh12aRUwIprzTJYI/'),
+    _get_drive_url('https://drive.google.com/file/d/1wYdp5nC9LnHQZ2FcmOoC0eClyWvcuARU/')
     # If you failed to download the dataset through the automatic downloader,
     # you can download it manually and modify the code to get the local dataset.
     # Or you can use the following links. Please follow the original LICENSE of CORD for usage.
@@ -59,7 +62,7 @@ _URLS = [
 ]
 
 class CordConfig(datasets.BuilderConfig):
-    """BuilderConfig for CORD"""
+    """BuilderConfig for CORD."""
     def __init__(self, **kwargs):
         """BuilderConfig for CORD.
         Args:
@@ -69,7 +72,7 @@ class CordConfig(datasets.BuilderConfig):
 
 class Cord(datasets.GeneratorBasedBuilder):
     BUILDER_CONFIGS = [
-        CordConfig(name="cord", version=datasets.Version("1.0.0"), description="CORD dataset"),
+        CordConfig(name='cord', version=datasets.Version('1.0.0'), description='CORD dataset'),
     ]
 
     def _info(self):
@@ -77,21 +80,21 @@ class Cord(datasets.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=datasets.Features(
                 {
-                    "id": datasets.Value("string"),
-                    "words": datasets.Sequence(datasets.Value("string")),
-                    "bboxes": datasets.Sequence(datasets.Sequence(datasets.Value("int64"))),
-                    "ner_tags": datasets.Sequence(
+                    'id': datasets.Value('string'),
+                    'words': datasets.Sequence(datasets.Value('string')),
+                    'bboxes': datasets.Sequence(datasets.Sequence(datasets.Value('int64'))),
+                    'ner_tags': datasets.Sequence(
                         datasets.features.ClassLabel(
-                            names=["O","B-MENU.NM","B-MENU.NUM","B-MENU.UNITPRICE","B-MENU.CNT","B-MENU.DISCOUNTPRICE","B-MENU.PRICE","B-MENU.ITEMSUBTOTAL","B-MENU.VATYN","B-MENU.ETC","B-MENU.SUB_NM","B-MENU.SUB_UNITPRICE","B-MENU.SUB_CNT","B-MENU.SUB_PRICE","B-MENU.SUB_ETC","B-VOID_MENU.NM","B-VOID_MENU.PRICE","B-SUB_TOTAL.SUBTOTAL_PRICE","B-SUB_TOTAL.DISCOUNT_PRICE","B-SUB_TOTAL.SERVICE_PRICE","B-SUB_TOTAL.OTHERSVC_PRICE","B-SUB_TOTAL.TAX_PRICE","B-SUB_TOTAL.ETC","B-TOTAL.TOTAL_PRICE","B-TOTAL.TOTAL_ETC","B-TOTAL.CASHPRICE","B-TOTAL.CHANGEPRICE","B-TOTAL.CREDITCARDPRICE","B-TOTAL.EMONEYPRICE","B-TOTAL.MENUTYPE_CNT","B-TOTAL.MENUQTY_CNT","I-MENU.NM","I-MENU.NUM","I-MENU.UNITPRICE","I-MENU.CNT","I-MENU.DISCOUNTPRICE","I-MENU.PRICE","I-MENU.ITEMSUBTOTAL","I-MENU.VATYN","I-MENU.ETC","I-MENU.SUB_NM","I-MENU.SUB_UNITPRICE","I-MENU.SUB_CNT","I-MENU.SUB_PRICE","I-MENU.SUB_ETC","I-VOID_MENU.NM","I-VOID_MENU.PRICE","I-SUB_TOTAL.SUBTOTAL_PRICE","I-SUB_TOTAL.DISCOUNT_PRICE","I-SUB_TOTAL.SERVICE_PRICE","I-SUB_TOTAL.OTHERSVC_PRICE","I-SUB_TOTAL.TAX_PRICE","I-SUB_TOTAL.ETC","I-TOTAL.TOTAL_PRICE","I-TOTAL.TOTAL_ETC","I-TOTAL.CASHPRICE","I-TOTAL.CHANGEPRICE","I-TOTAL.CREDITCARDPRICE","I-TOTAL.EMONEYPRICE","I-TOTAL.MENUTYPE_CNT","I-TOTAL.MENUQTY_CNT"]
+                            names=['O','B-MENU.NM','B-MENU.NUM','B-MENU.UNITPRICE','B-MENU.CNT','B-MENU.DISCOUNTPRICE','B-MENU.PRICE','B-MENU.ITEMSUBTOTAL','B-MENU.VATYN','B-MENU.ETC','B-MENU.SUB_NM','B-MENU.SUB_UNITPRICE','B-MENU.SUB_CNT','B-MENU.SUB_PRICE','B-MENU.SUB_ETC','B-VOID_MENU.NM','B-VOID_MENU.PRICE','B-SUB_TOTAL.SUBTOTAL_PRICE','B-SUB_TOTAL.DISCOUNT_PRICE','B-SUB_TOTAL.SERVICE_PRICE','B-SUB_TOTAL.OTHERSVC_PRICE','B-SUB_TOTAL.TAX_PRICE','B-SUB_TOTAL.ETC','B-TOTAL.TOTAL_PRICE','B-TOTAL.TOTAL_ETC','B-TOTAL.CASHPRICE','B-TOTAL.CHANGEPRICE','B-TOTAL.CREDITCARDPRICE','B-TOTAL.EMONEYPRICE','B-TOTAL.MENUTYPE_CNT','B-TOTAL.MENUQTY_CNT','I-MENU.NM','I-MENU.NUM','I-MENU.UNITPRICE','I-MENU.CNT','I-MENU.DISCOUNTPRICE','I-MENU.PRICE','I-MENU.ITEMSUBTOTAL','I-MENU.VATYN','I-MENU.ETC','I-MENU.SUB_NM','I-MENU.SUB_UNITPRICE','I-MENU.SUB_CNT','I-MENU.SUB_PRICE','I-MENU.SUB_ETC','I-VOID_MENU.NM','I-VOID_MENU.PRICE','I-SUB_TOTAL.SUBTOTAL_PRICE','I-SUB_TOTAL.DISCOUNT_PRICE','I-SUB_TOTAL.SERVICE_PRICE','I-SUB_TOTAL.OTHERSVC_PRICE','I-SUB_TOTAL.TAX_PRICE','I-SUB_TOTAL.ETC','I-TOTAL.TOTAL_PRICE','I-TOTAL.TOTAL_ETC','I-TOTAL.CASHPRICE','I-TOTAL.CHANGEPRICE','I-TOTAL.CREDITCARDPRICE','I-TOTAL.EMONEYPRICE','I-TOTAL.MENUTYPE_CNT','I-TOTAL.MENUQTY_CNT']
                         )
                     ),
-                    "image": datasets.Array3D(shape=(3, 224, 224), dtype="uint8"),
-                    "image_path": datasets.Value("string"),
+                    'image': datasets.Array3D(shape=(3, 224, 224), dtype='uint8'),
+                    'image_path': datasets.Value('string'),
                 }
             ),
             supervised_keys=None,
             citation=_CITATION,
-            homepage="https://github.com/clovaai/cord/",
+            homepage='https://github.com/clovaai/cord/',
         )
 
     def _split_generators(self, dl_manager):
@@ -99,23 +102,23 @@ class Cord(datasets.GeneratorBasedBuilder):
         """Uses local files located with data_dir"""
         downloaded_file = dl_manager.download_and_extract(_URLS)
         # move files from the second URL together with files from the first one.
-        dest = Path(downloaded_file[0])/"CORD"
-        for split in ["train", "dev", "test"]:
-            for file_type in ["image", "json"]:
-                if split == "test" and file_type == "json":
+        dest = Path(downloaded_file[0])/'CORD'
+        for split in ['train', 'dev', 'test']:
+            for file_type in ['image', 'json']:
+                if split == 'test' and file_type == 'json':
                     continue
-                files = (Path(downloaded_file[1])/"CORD"/split/file_type).iterdir()
+                files = (Path(downloaded_file[1])/'CORD'/split/file_type).iterdir()
                 for f in files:
                     os.rename(f, dest/split/file_type/f.name)
         return [
             datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"filepath": dest/"train"}
+                name=datasets.Split.TRAIN, gen_kwargs={'filepath': dest/'train'}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION, gen_kwargs={"filepath": dest/"dev"}
+                name=datasets.Split.VALIDATION, gen_kwargs={'filepath': dest/'dev'}
             ),
             datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"filepath": dest/"test"}
+                name=datasets.Split.TEST, gen_kwargs={'filepath': dest/'test'}
             ),
         ]
 
@@ -130,42 +133,42 @@ class Cord(datasets.GeneratorBasedBuilder):
         return bbox
 
     def _generate_examples(self, filepath):
-        logger.info("⏳ Generating examples from = %s", filepath)
-        ann_dir = os.path.join(filepath, "json")
-        img_dir = os.path.join(filepath, "image")
+        logger.info('⏳ Generating examples from = %s', filepath)
+        ann_dir = os.path.join(filepath, 'json')
+        img_dir = os.path.join(filepath, 'image')
         for guid, file in enumerate(sorted(os.listdir(ann_dir))):
             words = []
             bboxes = []
             ner_tags = []
             file_path = os.path.join(ann_dir, file)
-            with open(file_path, "r", encoding="utf8") as f:
+            with open(file_path, 'r', encoding='utf8') as f:
                 data = json.load(f)
             image_path = os.path.join(img_dir, file)
-            image_path = image_path.replace("json", "png")
+            image_path = image_path.replace('json', 'png')
             image, size = load_image(image_path)
-            for item in data["valid_line"]:
+            for item in data['valid_line']:
                 cur_line_bboxes = []
-                line_words, label = item["words"], item["category"]
-                line_words = [w for w in line_words if w["text"].strip() != ""]
+                line_words, label = item['words'], item['category']
+                line_words = [w for w in line_words if w['text'].strip() != '']
                 if len(line_words) == 0:
                     continue
-                if label == "other":
+                if label == 'other':
                     for w in line_words:
-                        words.append(w["text"])
-                        ner_tags.append("O")
-                        cur_line_bboxes.append(normalize_bbox(quad_to_box(w["quad"]), size))
+                        words.append(w['text'])
+                        ner_tags.append('O')
+                        cur_line_bboxes.append(normalize_bbox(quad_to_box(w['quad']), size))
                 else:
-                    words.append(line_words[0]["text"])
-                    ner_tags.append("B-" + label.upper())
-                    cur_line_bboxes.append(normalize_bbox(quad_to_box(line_words[0]["quad"]), size))
+                    words.append(line_words[0]['text'])
+                    ner_tags.append('B-' + label.upper())
+                    cur_line_bboxes.append(normalize_bbox(quad_to_box(line_words[0]['quad']), size))
                     for w in line_words[1:]:
-                        words.append(w["text"])
-                        ner_tags.append("I-" + label.upper())
-                        cur_line_bboxes.append(normalize_bbox(quad_to_box(w["quad"]), size))
+                        words.append(w['text'])
+                        ner_tags.append('I-' + label.upper())
+                        cur_line_bboxes.append(normalize_bbox(quad_to_box(w['quad']), size))
                 # by default: --segment_level_layout 1
                 # if do not want to use segment_level_layout, comment the following line
                 cur_line_bboxes = self.get_line_bbox(cur_line_bboxes)
                 bboxes.extend(cur_line_bboxes)
             # yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags, "image": image}
-            yield guid, {"id": str(guid), "words": words, "bboxes": bboxes, "ner_tags": ner_tags,
-                         "image": image, "image_path": image_path}
+            yield guid, {'id': str(guid), 'words': words, 'bboxes': bboxes, 'ner_tags': ner_tags,
+                         'image': image, 'image_path': image_path}

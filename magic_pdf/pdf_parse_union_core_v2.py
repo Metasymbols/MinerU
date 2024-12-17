@@ -7,7 +7,6 @@ from typing import List
 import fitz
 import torch
 from loguru import logger
-
 from magic_pdf.config.enums import SupportedPdfParseMethod
 from magic_pdf.config.ocr_content_type import BlockType, ContentType
 from magic_pdf.data.dataset import Dataset, PageableData
@@ -29,11 +28,17 @@ except ImportError:
 
 from magic_pdf.model.sub_modules.model_init import AtomModelSingleton
 from magic_pdf.para.para_split_v3 import para_split
-from magic_pdf.pre_proc.construct_page_dict import ocr_construct_page_component_v2
+from magic_pdf.pre_proc.construct_page_dict import \
+    ocr_construct_page_component_v2
 from magic_pdf.pre_proc.cut_image import ocr_cut_image_and_table
-from magic_pdf.pre_proc.ocr_detect_all_bboxes import ocr_prepare_bboxes_for_layout_split_v2
-from magic_pdf.pre_proc.ocr_dict_merge import fill_spans_in_blocks, fix_block_spans_v2, fix_discarded_block
-from magic_pdf.pre_proc.ocr_span_list_modify import get_qa_need_list_v2, remove_overlaps_low_confidence_spans, remove_overlaps_min_spans
+from magic_pdf.pre_proc.ocr_detect_all_bboxes import \
+    ocr_prepare_bboxes_for_layout_split_v2
+from magic_pdf.pre_proc.ocr_dict_merge import (fill_spans_in_blocks,
+                                               fix_block_spans_v2,
+                                               fix_discarded_block)
+from magic_pdf.pre_proc.ocr_span_list_modify import (
+    get_qa_need_list_v2, remove_overlaps_low_confidence_spans,
+    remove_overlaps_min_spans)
 
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
 os.environ['YOLO_VERBOSE'] = 'False'  # disable yolo logger
@@ -57,11 +62,13 @@ def __replace_STX_ETX(text_str: str):
 
 
 def __replace_0xfffd(text_str: str):
-    """Replace \ufffd, as these characters become garbled when extracted using pymupdf."""
+    """Replace \ufffd, as these characters become garbled when extracted using
+    pymupdf."""
     if text_str:
-        s = text_str.replace('\ufffd', " ")
+        s = text_str.replace('\ufffd', ' ')
         return s
     return text_str
+
 
 def chars_to_content(span):
     # 检查span中的char是否为空
@@ -70,10 +77,12 @@ def chars_to_content(span):
         # span['content'] = ''
     else:
         # 先给chars按char['bbox']的中心点的x坐标排序
-        span['chars'] = sorted(span['chars'], key=lambda x: (x['bbox'][0] + x['bbox'][2]) / 2)
+        span['chars'] = sorted(span['chars'], key=lambda x: (
+            x['bbox'][0] + x['bbox'][2]) / 2)
 
         # 求char的平均宽度
-        char_width_sum = sum([char['bbox'][2] - char['bbox'][0] for char in span['chars']])
+        char_width_sum = sum([char['bbox'][2] - char['bbox'][0]
+                             for char in span['chars']])
         char_avg_width = char_width_sum / len(span['chars'])
 
         content = ''
@@ -88,7 +97,8 @@ def chars_to_content(span):
     del span['chars']
 
 
-LINE_STOP_FLAG = ('.', '!', '?', '。', '！', '？', ')', '）', '"', '”', ':', '：', ';', '；', ']', '】', '}', '}', '>', '》', '、', ',', '，', '-', '—', '–',)
+LINE_STOP_FLAG = ('.', '!', '?', '。', '！', '？', ')', '）', '"', '”', ':', '：',
+                  ';', '；', ']', '】', '}', '}', '>', '》', '、', ',', '，', '-', '—', '–',)
 LINE_START_FLAG = ('(', '（', '"', '“', '【', '{', '《', '<', '「', '『', '【', '[',)
 
 
@@ -125,7 +135,8 @@ def calculate_char_in_span(char_bbox, span_bbox, char, span_height_radio=0.33):
     if (
         span_bbox[0] < char_center_x < span_bbox[2]
         and span_bbox[1] < char_center_y < span_bbox[3]
-        and abs(char_center_y - span_center_y) < span_height * span_height_radio  # 字符的中轴和span的中轴高度差不能超过1/4span高度
+        # 字符的中轴和span的中轴高度差不能超过1/4span高度
+        and abs(char_center_y - span_center_y) < span_height * span_height_radio
     ):
         return True
     else:
@@ -153,13 +164,14 @@ def calculate_char_in_span(char_bbox, span_bbox, char, span_height_radio=0.33):
 
 def txt_spans_extract_v2(pdf_page, spans, all_bboxes, all_discarded_blocks, lang):
 
-    text_blocks_raw = pdf_page.get_text('rawdict', flags=fitz.TEXT_PRESERVE_WHITESPACE | fitz.TEXT_MEDIABOX_CLIP)['blocks']
+    text_blocks_raw = pdf_page.get_text(
+        'rawdict', flags=fitz.TEXT_PRESERVE_WHITESPACE | fitz.TEXT_MEDIABOX_CLIP)['blocks']
 
     all_pymu_chars = []
     for block in text_blocks_raw:
         for line in block['lines']:
             cosine, sine = line['dir']
-            if abs (cosine) < 0.9 or abs(sine) > 0.1:
+            if abs(cosine) < 0.9 or abs(sine) > 0.1:
                 continue
             for span in line['spans']:
                 all_pymu_chars.extend(span['chars'])
@@ -200,7 +212,8 @@ def txt_spans_extract_v2(pdf_page, spans, all_bboxes, all_discarded_blocks, lang
 
     """垂直的span框直接用pymu的line进行填充"""
     if len(vertical_spans) > 0:
-        text_blocks = pdf_page.get_text('dict', flags=fitz.TEXTFLAGS_TEXT)['blocks']
+        text_blocks = pdf_page.get_text(
+            'dict', flags=fitz.TEXTFLAGS_TEXT)['blocks']
         all_pymu_lines = []
         for block in text_blocks:
             for line in block['lines']:
@@ -240,7 +253,8 @@ def txt_spans_extract_v2(pdf_page, spans, all_bboxes, all_discarded_blocks, lang
 
         for span in empty_spans:
             # 对span的bbox截图再ocr
-            span_img = cut_image_to_pil_image(span['bbox'], pdf_page, mode='cv2')
+            span_img = cut_image_to_pil_image(
+                span['bbox'], pdf_page, mode='cv2')
             ocr_res = ocr_model.ocr(span_img, det=False)
             if ocr_res and len(ocr_res) > 0:
                 if len(ocr_res[0]) > 0:
@@ -354,14 +368,14 @@ def cal_block_index(fix_blocks, sorted_bboxes):
                 del block['real_lines']
 
         import numpy as np
-
         from magic_pdf.model.sub_modules.reading_oreder.layoutreader.xycut import \
             recursive_xy_cut
 
         random_boxes = np.array(block_bboxes)
         np.random.shuffle(random_boxes)
         res = []
-        recursive_xy_cut(np.asarray(random_boxes).astype(int), np.arange(len(block_bboxes)), res)
+        recursive_xy_cut(np.asarray(random_boxes).astype(int),
+                         np.arange(len(block_bboxes)), res)
         assert len(res) == len(block_bboxes)
         sorted_boxes = random_boxes[np.array(res)].tolist()
 
@@ -413,7 +427,8 @@ def insert_lines_into_block(block_bbox, line_height, page_w, page_h):
         lines_positions = []
 
         for i in range(lines):
-            lines_positions.append([x0, current_y, x1, current_y + line_height])
+            lines_positions.append(
+                [x0, current_y, x1, current_y + line_height])
             current_y += line_height
         return lines_positions
 
@@ -431,7 +446,8 @@ def sort_lines_by_model(fix_blocks, page_w, page_h, line_height):
         ]:
             if len(block['lines']) == 0:
                 bbox = block['bbox']
-                lines = insert_lines_into_block(bbox, line_height, page_w, page_h)
+                lines = insert_lines_into_block(
+                    bbox, line_height, page_w, page_h)
                 for line in lines:
                     block['lines'].append({'bbox': line, 'spans': []})
                 page_line_list.extend(lines)
@@ -532,7 +548,8 @@ def process_block_list(blocks, body_type, block_type):
     indices = [block['index'] for block in blocks]
     median_index = statistics.median(indices)
 
-    body_bbox = next((block['bbox'] for block in blocks if block.get('type') == body_type), [])
+    body_bbox = next(
+        (block['bbox'] for block in blocks if block.get('type') == body_type), [])
 
     return {
         'type': block_type,
@@ -561,10 +578,12 @@ def revert_group_blocks(blocks):
             new_blocks.append(block)
 
     for group_id, blocks in image_groups.items():
-        new_blocks.append(process_block_list(blocks, BlockType.ImageBody, BlockType.Image))
+        new_blocks.append(process_block_list(
+            blocks, BlockType.ImageBody, BlockType.Image))
 
     for group_id, blocks in table_groups.items():
-        new_blocks.append(process_block_list(blocks, BlockType.TableBody, BlockType.Table))
+        new_blocks.append(process_block_list(
+            blocks, BlockType.TableBody, BlockType.Table))
 
     return new_blocks
 
@@ -582,7 +601,8 @@ def remove_outside_spans(spans, all_bboxes, all_discarded_blocks):
         if block_type not in [BlockType.ImageBody, BlockType.TableBody]:
             other_block_type.append(block_type)
     other_block_bboxes = get_block_bboxes(all_bboxes, other_block_type)
-    discarded_block_bboxes = get_block_bboxes(all_discarded_blocks, [BlockType.Discarded])
+    discarded_block_bboxes = get_block_bboxes(
+        all_discarded_blocks, [BlockType.Discarded])
 
     new_spans = []
 
@@ -673,7 +693,8 @@ def parse_page_core(
     spans = remove_outside_spans(spans, all_bboxes, all_discarded_blocks)
 
     """删除重叠spans中置信度较低的那些"""
-    spans, dropped_spans_by_confidence = remove_overlaps_low_confidence_spans(spans)
+    spans, dropped_spans_by_confidence = remove_overlaps_low_confidence_spans(
+        spans)
     """删除重叠spans中较小的那些"""
     spans, dropped_spans_by_span_overlap = remove_overlaps_min_spans(spans)
 
@@ -681,7 +702,8 @@ def parse_page_core(
     if parse_mode == SupportedPdfParseMethod.TXT:
 
         """使用新版本的混合ocr方案."""
-        spans = txt_spans_extract_v2(page_doc, spans, all_bboxes, all_discarded_blocks, lang)
+        spans = txt_spans_extract_v2(
+            page_doc, spans, all_bboxes, all_discarded_blocks, lang)
 
     elif parse_mode == SupportedPdfParseMethod.OCR:
         pass
@@ -696,7 +718,8 @@ def parse_page_core(
 
     """如果当前页面没有有效的bbox则跳过"""
     if len(all_bboxes) == 0:
-        logger.warning(f'skip this page, not found useful bbox, page_id: {page_id}')
+        logger.warning(
+            f'skip this page, not found useful bbox, page_id: {page_id}')
         return ocr_construct_page_component_v2(
             [],
             [],
@@ -727,7 +750,8 @@ def parse_page_core(
     line_height = get_line_height(fix_blocks)
 
     """获取所有line并对line排序"""
-    sorted_bboxes = sort_lines_by_model(fix_blocks, page_w, page_h, line_height)
+    sorted_bboxes = sort_lines_by_model(
+        fix_blocks, page_w, page_h, line_height)
 
     """根据line的中位数算block的序列关系"""
     fix_blocks = cal_block_index(fix_blocks, sorted_bboxes)

@@ -95,4 +95,3 @@
 
 
 MinerU 已安装，查看 :doc:`../quick_start` 或阅读 :doc:`boost_with_cuda` 以加速推理。
-

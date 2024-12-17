@@ -42,7 +42,7 @@
 
 运行以上的代码，会得到如下的结果
 
-.. code:: bash 
+.. code:: bash
 
     output/
     ├── abc.md
@@ -70,9 +70,9 @@
 
 pipeline 的执行过程如下图所示
 
-.. image:: ../../_static/image/pipeline.drawio.svg 
+.. image:: ../../_static/image/pipeline.drawio.svg
 
-.. raw:: html 
+.. raw:: html
 
     <br> </br>
 
@@ -147,7 +147,7 @@ pipeline 的执行过程如下图所示
 ``Dataset`` 、 ``InferenceResult`` 和 ``PipeResult`` 类均有 ``apply`` method。可用于组合不同阶段的运算过程。
 如下所示，``MinerU`` 提供一套组合这些类的计算过程。
 
-.. code:: python 
+.. code:: python
 
     # proc
     ## Create Dataset Instance
@@ -157,7 +157,7 @@ pipeline 的执行过程如下图所示
 
 用户可以根据的需求，自行实现一些组合用的函数。比如用户通过 ``apply`` 方法实现一个统计 ``pdf`` 文件页数的功能。
 
-.. code:: python 
+.. code:: python
 
     from magic_pdf.data.data_reader_writer import  FileBasedDataReader
     from magic_pdf.data.dataset import PymuDocDataset

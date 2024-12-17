@@ -1,5 +1,5 @@
 
-read_api 
+read_api
 ==========
 
 Read the content from file or directory to create ``Dataset``, Currently we provided serval functions that cover some scenarios.
@@ -20,7 +20,7 @@ Read the contet from jsonl which may located on local machine or remote s3. if y
 
     from magic_pdf.data.io.read_api import *
 
-    # read jsonl from local machine 
+    # read jsonl from local machine
     datasets = read_jsonl("tt.jsonl", None)
 
     # read jsonl from remote s3
@@ -49,14 +49,14 @@ read_local_images
 
 Read images from path or directory
 
-.. code:: python 
+.. code:: python
 
     from magic_pdf.data.io.read_api import *
 
-    # read from image path 
+    # read from image path
     datasets = read_local_images("tt.png")
 
-    # read files from directory that endswith suffix in suffixes array 
+    # read files from directory that endswith suffix in suffixes array
     datasets = read_local_images("images/", suffixes=["png", "jpg"])
 
 

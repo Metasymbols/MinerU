@@ -14,9 +14,10 @@ import os
 import subprocess
 import sys
 
-from sphinx.ext import autodoc
 from docutils import nodes
 from docutils.parsers.rst import Directive
+from sphinx.ext import autodoc
+
 
 def install(package):
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
@@ -66,7 +67,7 @@ extensions = [
 ]
 
 # class hierarchy diagram
-inheritance_graph_attrs = dict(rankdir="LR", size='"8.0, 12.0"', fontsize=14, ratio='compress')
+inheritance_graph_attrs = dict(rankdir='LR', size='"8.0, 12.0"', fontsize=14, ratio='compress')
 inheritance_node_attrs = dict(shape='ellipse', fontsize=14, height=0.75)
 inheritance_edge_attrs = dict(arrow='vee')
 
@@ -133,7 +134,7 @@ autodoc.ClassDocumenter = MockedClassDocumenter
 navigation_with_keys = False
 
 
-# add custom directive 
+# add custom directive
 
 
 class VideoDirective(Directive):

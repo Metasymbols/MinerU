@@ -34,6 +34,7 @@ export ES_USER={some_es_user}
 export ES_PASSWORD={some_es_password}
 export ES_URL=http://{es_url}:9200
 ```
+
 For instructions on obtaining a DASHSCOPE_API_KEY, refer to [documentation](https://help.aliyun.com/zh/dashscope/opening-service)
 
 ## Usage
@@ -95,7 +96,6 @@ answer: The statement implies that men are born free and equal in terms of their
 
 `MinerU` provides a `RAG` integration interface, allowing users to specify a single input `pdf` file or a directory. `MinerU` will automatically parse the input files and return an iterable interface for retrieving the data.
 
-
 ### API Interface
 
 ```python
@@ -147,9 +147,8 @@ class Node(BaseModel):
 
 ```
 
-Tables can be stored in one of three formats: image, LaTeX, or HTML. 
+Tables can be stored in one of three formats: image, LaTeX, or HTML.
 `anno_id` is a globally unique ID for each Node. It can be used later to match this Node with other Nodes. The relationships between nodes can be retrieved using the `get_rel_map` method. Users can use `anno_id` to link nodes and construct a RAG index that includes node relationships.
-
 
 ### Node Relationship Matrix
 

@@ -4,7 +4,6 @@ from itertools import count
 from typing import Dict, List, Optional
 
 import torch
-
 from detectron2.modeling.meta_arch import GeneralizedRCNN
 from detectron2.modeling.meta_arch.build import META_ARCH_REGISTRY
 from detectron2.structures import Instances
@@ -13,8 +12,9 @@ from detectron2.utils.events import get_event_storage
 
 @META_ARCH_REGISTRY.register()
 class VLGeneralizedRCNN(GeneralizedRCNN):
-    """
-    Generalized R-CNN. Any models that contains the following three components:
+    """Generalized R-CNN.
+
+    Any models that contains the following three components:
     1. Per-image feature extraction (aka backbone)
     2. Region proposal generation
     3. Per-region feature extraction and prediction
@@ -47,8 +47,8 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
             return self.inference(batched_inputs)
 
         images = self.preprocess_image(batched_inputs)
-        if "instances" in batched_inputs[0]:
-            gt_instances = [x["instances"].to(
+        if 'instances' in batched_inputs[0]:
+            gt_instances = [x['instances'].to(
                 self.device) for x in batched_inputs]
         else:
             gt_instances = None
@@ -61,8 +61,8 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
             proposals, proposal_losses = self.proposal_generator(
                 images, features, gt_instances)
         else:
-            assert "proposals" in batched_inputs[0]
-            proposals = [x["proposals"].to(self.device)
+            assert 'proposals' in batched_inputs[0]
+            proposals = [x['proposals'].to(self.device)
                          for x in batched_inputs]
             proposal_losses = {}
 
@@ -84,8 +84,7 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
         detected_instances: Optional[List[Instances]] = None,
         do_postprocess: bool = True,
     ):
-        """
-        Run inference on the given inputs.
+        """Run inference on the given inputs.
 
         Args:
             batched_inputs (list[dict]): same as in :meth:`forward`
@@ -112,8 +111,8 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
             if self.proposal_generator is not None:
                 proposals, _ = self.proposal_generator(images, features, None)
             else:
-                assert "proposals" in batched_inputs[0]
-                proposals = [x["proposals"].to(self.device)
+                assert 'proposals' in batched_inputs[0]
+                proposals = [x['proposals'].to(self.device)
                              for x in batched_inputs]
 
             results, _ = self.roi_heads(images, features, proposals, None)
@@ -124,14 +123,14 @@ class VLGeneralizedRCNN(GeneralizedRCNN):
                 features, detected_instances)
 
         if do_postprocess:
-            assert not torch.jit.is_scripting(), "Scripting is not supported for postprocess."
+            assert not torch.jit.is_scripting(), 'Scripting is not supported for postprocess.'
             return GeneralizedRCNN._postprocess(results, batched_inputs, images.image_sizes)
         else:
             return results
 
     def get_batch(self, examples, images):
-        if len(examples) >= 1 and "bbox" not in examples[0]:  # image_only
-            return {"images": images.tensor}
+        if len(examples) >= 1 and 'bbox' not in examples[0]:  # image_only
+            return {'images': images.tensor}
 
         return input
 

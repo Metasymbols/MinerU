@@ -11,26 +11,23 @@
 # CoaT: https://github.com/mlpc-ucsd/CoaT
 # --------------------------------------------------------------------------------
 
-from detectron2.layers import (
-    ShapeSpec,
-)
-from detectron2.modeling import Backbone, BACKBONE_REGISTRY, FPN
+from detectron2.layers import ShapeSpec
+from detectron2.modeling import BACKBONE_REGISTRY, FPN, Backbone
 from detectron2.modeling.backbone.fpn import LastLevelMaxPool
-
-from .beit import beit_base_patch16, dit_base_patch16, dit_large_patch16, beit_large_patch16
-from .deit import deit_base_patch16, mae_base_patch16
-from .layoutlmft.models.layoutlmv3 import LayoutLMv3Model
 from transformers import AutoConfig
 
+from .beit import (beit_base_patch16, beit_large_patch16, dit_base_patch16,
+                   dit_large_patch16)
+from .deit import deit_base_patch16, mae_base_patch16
+from .layoutlmft.models.layoutlmv3 import LayoutLMv3Model
+
 __all__ = [
-    "build_vit_fpn_backbone",
+    'build_vit_fpn_backbone',
 ]
 
 
 class VIT_Backbone(Backbone):
-    """
-    Implement VIT backbone.
-    """
+    """Implement VIT backbone."""
 
     def __init__(self, name, out_features, drop_path, img_size, pos_type, model_kwargs,
                  config_path=None, image_only=False, cfg=None):
@@ -38,42 +35,42 @@ class VIT_Backbone(Backbone):
         self._out_features = out_features
         if 'base' in name:
             self._out_feature_strides = {
-                "layer3": 4, "layer5": 8, "layer7": 16, "layer11": 32}
+                'layer3': 4, 'layer5': 8, 'layer7': 16, 'layer11': 32}
             self._out_feature_channels = {
-                "layer3": 768, "layer5": 768, "layer7": 768, "layer11": 768}
+                'layer3': 768, 'layer5': 768, 'layer7': 768, 'layer11': 768}
         else:
             self._out_feature_strides = {
-                "layer7": 4, "layer11": 8, "layer15": 16, "layer23": 32}
+                'layer7': 4, 'layer11': 8, 'layer15': 16, 'layer23': 32}
             self._out_feature_channels = {
-                "layer7": 1024, "layer11": 1024, "layer15": 1024, "layer23": 1024}
+                'layer7': 1024, 'layer11': 1024, 'layer15': 1024, 'layer23': 1024}
 
         if name == 'beit_base_patch16':
             model_func = beit_base_patch16
         elif name == 'dit_base_patch16':
             model_func = dit_base_patch16
-        elif name == "deit_base_patch16":
+        elif name == 'deit_base_patch16':
             model_func = deit_base_patch16
-        elif name == "mae_base_patch16":
+        elif name == 'mae_base_patch16':
             model_func = mae_base_patch16
-        elif name == "dit_large_patch16":
+        elif name == 'dit_large_patch16':
             model_func = dit_large_patch16
-        elif name == "beit_large_patch16":
+        elif name == 'beit_large_patch16':
             model_func = beit_large_patch16
 
         if 'beit' in name or 'dit' in name:
-            if pos_type == "abs":
+            if pos_type == 'abs':
                 self.backbone = model_func(img_size=img_size,
                                            out_features=out_features,
                                            drop_path_rate=drop_path,
                                            use_abs_pos_emb=True,
                                            **model_kwargs)
-            elif pos_type == "shared_rel":
+            elif pos_type == 'shared_rel':
                 self.backbone = model_func(img_size=img_size,
                                            out_features=out_features,
                                            drop_path_rate=drop_path,
                                            use_shared_rel_pos_bias=True,
                                            **model_kwargs)
-            elif pos_type == "rel":
+            elif pos_type == 'rel':
                 self.backbone = model_func(img_size=img_size,
                                            out_features=out_features,
                                            drop_path_rate=drop_path,
@@ -81,7 +78,7 @@ class VIT_Backbone(Backbone):
                                            **model_kwargs)
             else:
                 raise ValueError()
-        elif "layoutlmv3" in name:
+        elif 'layoutlmv3' in name:
             config = AutoConfig.from_pretrained(config_path)
             # disable relative bias as DiT
             config.has_spatial_attention_bias = False
@@ -103,15 +100,15 @@ class VIT_Backbone(Backbone):
         Returns:
             dict[str->Tensor]: names and the corresponding features
         """
-        if "layoutlmv3" in self.name:
+        if 'layoutlmv3' in self.name:
             return self.backbone.forward(
-                input_ids=x["input_ids"] if "input_ids" in x else None,
-                bbox=x["bbox"] if "bbox" in x else None,
-                images=x["images"] if "images" in x else None,
-                attention_mask=x["attention_mask"] if "attention_mask" in x else None,
+                input_ids=x['input_ids'] if 'input_ids' in x else None,
+                bbox=x['bbox'] if 'bbox' in x else None,
+                images=x['images'] if 'images' in x else None,
+                attention_mask=x['attention_mask'] if 'attention_mask' in x else None,
                 # output_hidden_states=True,
             )
-        assert x.dim() == 4, f"VIT takes an input of shape(N, C, H, W). Got {x.shape} instead!"
+        assert x.dim() == 4, f'VIT takes an input of shape(N, C, H, W). Got {x.shape} instead!'
         return self.backbone.forward_features(x)
 
     def output_shape(self):
@@ -124,8 +121,7 @@ class VIT_Backbone(Backbone):
 
 
 def build_VIT_backbone(cfg):
-    """
-    Create a VIT instance from config.
+    """Create a VIT instance from config.
 
     Args:
         cfg: a detectron2 CfgNode
@@ -140,7 +136,7 @@ def build_VIT_backbone(cfg):
     img_size = cfg.MODEL.VIT.IMG_SIZE
     pos_type = cfg.MODEL.VIT.POS_TYPE
 
-    model_kwargs = eval(str(cfg.MODEL.VIT.MODEL_KWARGS).replace("`", ""))
+    model_kwargs = eval(str(cfg.MODEL.VIT.MODEL_KWARGS).replace('`', ''))
 
     if 'layoutlmv3' in name:
         if cfg.MODEL.CONFIG_PATH != '':
@@ -157,8 +153,7 @@ def build_VIT_backbone(cfg):
 
 @BACKBONE_REGISTRY.register()
 def build_vit_fpn_backbone(cfg, input_shape: ShapeSpec):
-    """
-    Create a VIT w/ FPN backbone.
+    """Create a VIT w/ FPN backbone.
 
     Args:
         cfg: a detectron2 CfgNode

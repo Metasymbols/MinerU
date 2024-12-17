@@ -1,5 +1,5 @@
 
-数据读取和写入类 
+数据读取和写入类
 =================
 
 旨在从不同的媒介读取或写入字节。如果 MinerU 没有提供合适的类，你可以实现新的类以满足个人场景的需求。实现新的类非常容易，唯一的要求是继承自 DataReader 或 DataWriter。
@@ -73,13 +73,13 @@ S3DataReader 基于 MultiBucketS3DataReader 构建，但仅支持单个桶。S3D
 ---------
 .. code:: python
 
-    from magic_pdf.data.data_reader_writer import * 
+    from magic_pdf.data.data_reader_writer import *
 
     # 文件相关的
     file_based_reader1 = FileBasedDataReader('')
 
-    ## 将读取文件 abc 
-    file_based_reader1.read('abc') 
+    ## 将读取文件 abc
+    file_based_reader1.read('abc')
 
     file_based_reader2 = FileBasedDataReader('/tmp')
 
@@ -118,7 +118,7 @@ S3DataReader 基于 MultiBucketS3DataReader 构建，但仅支持单个桶。S3D
         endpoint_url: "localhost"
     )
 
-    ## 将读取 s3://test_bucket/test_prefix/abc 
+    ## 将读取 s3://test_bucket/test_prefix/abc
     s3_reader1.read('abc')
 
     ## 将读取 s3://test_bucket/efg
@@ -134,10 +134,10 @@ S3DataReader 基于 MultiBucketS3DataReader 构建，但仅支持单个桶。S3D
     file_based_writer1 = FileBasedDataWriter('')
 
     ## 将写入 123 到 abc
-    file_based_writer1.write('abc', '123'.encode()) 
+    file_based_writer1.write('abc', '123'.encode())
 
     ## 将写入 123 到 abc
-    file_based_writer1.write_string('abc', '123') 
+    file_based_writer1.write_string('abc', '123')
 
     file_based_writer2 = FileBasedDataWriter('/tmp')
 
@@ -179,12 +179,11 @@ S3DataReader 基于 MultiBucketS3DataReader 构建，但仅支持单个桶。S3D
         endpoint_url: "localhost"
     )
 
-    ## 将写入 123 到 s3://test_bucket/test_prefix/abc 
+    ## 将写入 123 到 s3://test_bucket/test_prefix/abc
     s3_writer1.write('abc', '123'.encode())
 
-    ## 将写入 123 到 s3://test_bucket/test_prefix/abc 
+    ## 将写入 123 到 s3://test_bucket/test_prefix/abc
     s3_writer1.write_string('abc', '123')
 
     ## 将写入 123 到 s3://test_bucket/efg
     s3_writer1.write('s3://test_bucket/efg', '123'.encode())
-

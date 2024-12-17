@@ -1,14 +1,15 @@
-"""
-Mostly copy-paste from DINO and timm library:
+"""Mostly copy-paste from DINO and timm library:
+
 https://github.com/facebookresearch/dino
 https://github.com/rwightman/pytorch-image-models/blob/master/timm/models/vision_transformer.py
 """
 import math
+from functools import partial
+
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
-from timm.models.layers import trunc_normal_, drop_path, to_2tuple
-from functools import partial
+from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 
 
 def _cfg(url='', **kwargs):
@@ -22,8 +23,8 @@ def _cfg(url='', **kwargs):
 
 
 class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
-    """
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of
+    residual blocks)."""
 
     def __init__(self, drop_prob=None):
         super(DropPath, self).__init__()
@@ -106,8 +107,7 @@ class Block(nn.Module):
 
 
 class PatchEmbed(nn.Module):
-    """ Image to Patch Embedding
-    """
+    """Image to Patch Embedding."""
 
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()
@@ -131,9 +131,8 @@ class PatchEmbed(nn.Module):
 
 
 class HybridEmbed(nn.Module):
-    """ CNN Feature Map Embedding
-    Extract feature map from CNN, flatten, project to embedding dim.
-    """
+    """CNN Feature Map Embedding Extract feature map from CNN, flatten, project
+    to embedding dim."""
 
     def __init__(self, backbone, img_size=224, feature_size=None, in_chans=3, embed_dim=768):
         super().__init__()
@@ -168,8 +167,7 @@ class HybridEmbed(nn.Module):
 
 
 class ViT(nn.Module):
-    """ Vision Transformer with support for patch or hybrid CNN input stage
-    """
+    """Vision Transformer with support for patch or hybrid CNN input stage."""
 
     def __init__(self,
                  model_name='vit_base_patch16_224',
@@ -341,7 +339,8 @@ class ViT(nn.Module):
         return {'pos_embed', 'cls_token'}
 
     def _conv_filter(self, state_dict, patch_size=16):
-        """ convert patch embedding weight from manual patchify + linear proj to conv"""
+        """convert patch embedding weight from manual patchify + linear proj to
+        conv."""
         out_dict = {}
         for k, v in state_dict.items():
             if 'patch_embed.proj.weight' in k:

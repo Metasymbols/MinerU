@@ -1,5 +1,5 @@
 
-Quick Start 
+Quick Start
 ==============
 
 Eager to get started? This page gives a good introduction to MinerU. Follow Installation to set up a project and install MinerU first.
@@ -10,4 +10,3 @@ Eager to get started? This page gives a good introduction to MinerU. Follow Inst
 
     quick_start/command_line
     quick_start/to_markdown
-

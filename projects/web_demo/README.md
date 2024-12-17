@@ -1,5 +1,7 @@
 # MinerU Local web_demo
+
 ## Feature Overview
+
 <p align="center">
   <img src="images/web_demo_1.png" width="600px" style="vertical-align:middle;">
 </p>
@@ -13,7 +15,6 @@
 ## Installation and Deployment
 
 0. MinerU Installation and Deployment
-
 
 ```
 # The service depends on mineru, please ensure mineru is installed first

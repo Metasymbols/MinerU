@@ -96,10 +96,10 @@ class Dataset(ABC):
 
     @abstractmethod
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """Dump the file.
 
-        Args: 
-            file_path (str): the file path 
+        Args:
+            file_path (str): the file path
         """
         pass
 
@@ -118,7 +118,7 @@ class Dataset(ABC):
 
     @abstractmethod
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """classify the dataset.
 
         Returns:
             SupportedPdfParseMethod: _description_
@@ -127,8 +127,7 @@ class Dataset(ABC):
 
     @abstractmethod
     def clone(self):
-        """clone this dataset
-        """
+        """clone this dataset."""
         pass
 
 
@@ -176,12 +175,12 @@ class PymuDocDataset(Dataset):
         return self._records[page_id]
 
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """Dump the file.
 
-        Args: 
-            file_path (str): the file path 
+        Args:
+            file_path (str): the file path
         """
-        
+
         dir_name = os.path.dirname(file_path)
         if dir_name not in ('', '.', '..'):
             os.makedirs(dir_name, exist_ok=True)
@@ -200,7 +199,7 @@ class PymuDocDataset(Dataset):
         return proc(self, *args, **kwargs)
 
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """classify the dataset.
 
         Returns:
             SupportedPdfParseMethod: _description_
@@ -208,8 +207,7 @@ class PymuDocDataset(Dataset):
         return classify(self._data_bits)
 
     def clone(self):
-        """clone this dataset
-        """
+        """clone this dataset."""
         return PymuDocDataset(self._raw_data)
 
 
@@ -258,10 +256,10 @@ class ImageDataset(Dataset):
         return self._records[page_id]
 
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """Dump the file.
 
-        Args: 
-            file_path (str): the file path 
+        Args:
+            file_path (str): the file path
         """
         dir_name = os.path.dirname(file_path)
         if dir_name not in ('', '.', '..'):
@@ -281,7 +279,7 @@ class ImageDataset(Dataset):
         return proc(self, *args, **kwargs)
 
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """classify the dataset.
 
         Returns:
             SupportedPdfParseMethod: _description_
@@ -289,8 +287,7 @@ class ImageDataset(Dataset):
         return SupportedPdfParseMethod.OCR
 
     def clone(self):
-        """clone this dataset
-        """
+        """clone this dataset."""
         return ImageDataset(self._raw_data)
 
 class Doc(PageableData):

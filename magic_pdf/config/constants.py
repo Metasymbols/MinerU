@@ -55,4 +55,3 @@ class MODEL_NAME:
 
 PARSE_TYPE_TXT = 'txt'
 PARSE_TYPE_OCR = 'ocr'
-

@@ -1,13 +1,13 @@
-import os
 import argparse
+import os
 import re
 
-from PIL import Image
 import torch
-from torch.utils.data import Dataset, DataLoader
+import unimernet.tasks as tasks
+from PIL import Image
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from unimernet.common.config import Config
-import unimernet.tasks as tasks
 from unimernet.processors import load_processor
 
 
@@ -31,8 +31,7 @@ class MathDataset(Dataset):
 
 
 def latex_rm_whitespace(s: str):
-    """Remove unnecessary whitespace from LaTeX code.
-    """
+    """Remove unnecessary whitespace from LaTeX code."""
     text_reg = r'(\\(operatorname|mathrm|text|mathbf)\s?\*? {.*?})'
     letter = '[a-zA-Z]'
     noletter = '[\W_^ \d]'
@@ -54,7 +53,7 @@ class UnimernetModel(object):
 
         args = argparse.Namespace(cfg_path=cfg_path, options=None)
         cfg = Config(args)
-        cfg.config.model.pretrained = os.path.join(weight_dir, "pytorch_model.pth")
+        cfg.config.model.pretrained = os.path.join(weight_dir, 'pytorch_model.pth')
         cfg.config.model.model_config.model_name = weight_dir
         cfg.config.model.tokenizer_config.path = weight_dir
         task = tasks.setup_task(cfg)
@@ -93,6 +92,3 @@ class UnimernetModel(object):
         for res, latex in zip(formula_list, mfr_res):
             res['latex'] = latex_rm_whitespace(latex)
         return formula_list
-
-
-

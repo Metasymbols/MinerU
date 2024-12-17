@@ -58,4 +58,3 @@
    :class: tip
 
    欲知更多有关结果文件的信息，请参考 :doc:`../tutorial/output_file_description`
-

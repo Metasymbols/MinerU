@@ -3,13 +3,14 @@ import time
 
 import cv2
 import numpy as np
-from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
-    check_img, merge_det_boxes, update_det_boxes)
 from paddleocr import PaddleOCR
 from ppocr.utils.logging import get_logger
 from ppocr.utils.utility import alpha_to_color, binarize_img
 from tools.infer.predict_system import sorted_boxes
 from tools.infer.utility import get_minarea_rect_crop, get_rotate_crop_image
+
+from magic_pdf.model.sub_modules.ocr.paddleocr.ocr_utils import (
+    check_img, merge_det_boxes, update_det_boxes)
 
 logger = get_logger()
 
@@ -90,7 +91,7 @@ class ModifiedPaddleOCR(PaddleOCR):
                     bef = time.time()
                     dt_boxes = update_det_boxes(dt_boxes, mfd_res)
                     aft = time.time()
-                    logger.debug("split text box by formula, new dt_boxes num : {}, elapsed : {}".format(
+                    logger.debug('split text box by formula, new dt_boxes num : {}, elapsed : {}'.format(
                         len(dt_boxes), aft - bef))
                 tmp_res = [box.tolist() for box in dt_boxes]
                 ocr_res.append(tmp_res)
@@ -116,7 +117,7 @@ class ModifiedPaddleOCR(PaddleOCR):
         time_dict = {'det': 0, 'rec': 0, 'cls': 0, 'all': 0}
 
         if img is None:
-            logger.debug("no valid image provided")
+            logger.debug('no valid image provided')
             return None, None, time_dict
 
         start = time.time()
@@ -125,12 +126,12 @@ class ModifiedPaddleOCR(PaddleOCR):
         time_dict['det'] = elapse
 
         if dt_boxes is None:
-            logger.debug("no dt_boxes found, elapsed : {}".format(elapse))
+            logger.debug('no dt_boxes found, elapsed : {}'.format(elapse))
             end = time.time()
             time_dict['all'] = end - start
             return None, None, time_dict
         else:
-            logger.debug("dt_boxes num : {}, elapsed : {}".format(
+            logger.debug('dt_boxes num : {}, elapsed : {}'.format(
                 len(dt_boxes), elapse))
         img_crop_list = []
 
@@ -143,12 +144,12 @@ class ModifiedPaddleOCR(PaddleOCR):
             bef = time.time()
             dt_boxes = update_det_boxes(dt_boxes, mfd_res)
             aft = time.time()
-            logger.debug("split text box by formula, new dt_boxes num : {}, elapsed : {}".format(
+            logger.debug('split text box by formula, new dt_boxes num : {}, elapsed : {}'.format(
                 len(dt_boxes), aft - bef))
 
         for bno in range(len(dt_boxes)):
             tmp_box = copy.deepcopy(dt_boxes[bno])
-            if self.args.det_box_type == "quad":
+            if self.args.det_box_type == 'quad':
                 img_crop = get_rotate_crop_image(ori_im, tmp_box)
             else:
                 img_crop = get_minarea_rect_crop(ori_im, tmp_box)
@@ -157,12 +158,12 @@ class ModifiedPaddleOCR(PaddleOCR):
             img_crop_list, angle_list, elapse = self.text_classifier(
                 img_crop_list)
             time_dict['cls'] = elapse
-            logger.debug("cls num  : {}, elapsed : {}".format(
+            logger.debug('cls num  : {}, elapsed : {}'.format(
                 len(img_crop_list), elapse))
 
         rec_res, elapse = self.text_recognizer(img_crop_list)
         time_dict['rec'] = elapse
-        logger.debug("rec_res num  : {}, elapsed : {}".format(
+        logger.debug('rec_res num  : {}, elapsed : {}'.format(
             len(rec_res), elapse))
         if self.args.save_crop_res:
             self.draw_crop_rec_res(self.args.crop_res_save_dir, img_crop_list,

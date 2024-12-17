@@ -1,13 +1,14 @@
+import base64
+from io import BytesIO
+
 import cv2
 import numpy as np
 from loguru import logger
-from io import BytesIO
 from PIL import Image
-import base64
+from ppocr.utils.utility import check_and_read
+
 from magic_pdf.libs.boxbase import __is_overlaps_y_exceeds_threshold
 from magic_pdf.pre_proc.ocr_dict_merge import merge_spans_to_line
-
-from ppocr.utils.utility import check_and_read
 
 
 def img_decode(content: bytes):
@@ -35,15 +36,15 @@ def check_img(img):
                     buf.seek(0)
                     image_bytes = buf.read()
                     data_base64 = str(base64.b64encode(image_bytes),
-                                      encoding="utf-8")
+                                      encoding='utf-8')
                     image_decode = base64.b64decode(data_base64)
                     img_array = np.frombuffer(image_decode, np.uint8)
                     img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
                 except:
-                    logger.error("error in loading image:{}".format(image_file))
+                    logger.error('error in loading image:{}'.format(image_file))
                     return None
         if img is None:
-            logger.error("error in loading image:{}".format(image_file))
+            logger.error('error in loading image:{}'.format(image_file))
             return None
     if isinstance(img, np.ndarray) and len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -52,13 +53,13 @@ def check_img(img):
 
 
 def bbox_to_points(bbox):
-    """ 将bbox格式转换为四个顶点的数组 """
+    """将bbox格式转换为四个顶点的数组."""
     x0, y0, x1, y1 = bbox
     return np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]]).astype('float32')
 
 
 def points_to_bbox(points):
-    """ 将四个顶点的数组转换为bbox格式 """
+    """将四个顶点的数组转换为bbox格式."""
     x0, y0 = points[0]
     x1, _ = points[1]
     _, y1 = points[2]
@@ -142,8 +143,7 @@ def update_det_boxes(dt_boxes, mfd_res):
 
 
 def merge_overlapping_spans(spans):
-    """
-    Merges overlapping spans on the same line.
+    """Merges overlapping spans on the same line.
 
     :param spans: A list of span coordinates [(x1, y1, x2, y2), ...]
     :return: A list of merged spans
@@ -179,8 +179,7 @@ def merge_overlapping_spans(spans):
 
 
 def merge_det_boxes(dt_boxes):
-    """
-    Merge detection boxes.
+    """Merge detection boxes.
 
     This function takes a list of detected bounding boxes, each represented by four corner points.
     The goal is to merge these bounding boxes into larger text regions.
@@ -234,7 +233,7 @@ def get_adjusted_mfdetrec_res(single_page_mfdetrec_res, useful_list):
     # Adjust the coordinates of the formula area
     adjusted_mfdetrec_res = []
     for mf_res in single_page_mfdetrec_res:
-        mf_xmin, mf_ymin, mf_xmax, mf_ymax = mf_res["bbox"]
+        mf_xmin, mf_ymin, mf_xmax, mf_ymax = mf_res['bbox']
         # Adjust the coordinates of the formula area to the coordinates relative to the cropping area
         x0 = mf_xmin - xmin + paste_x
         y0 = mf_ymin - ymin + paste_y
@@ -245,7 +244,7 @@ def get_adjusted_mfdetrec_res(single_page_mfdetrec_res, useful_list):
             continue
         else:
             adjusted_mfdetrec_res.append({
-                "bbox": [x0, y0, x1, y1],
+                'bbox': [x0, y0, x1, y1],
             })
     return adjusted_mfdetrec_res
 
@@ -263,7 +262,7 @@ def get_ocr_result_list(ocr_res, useful_list):
                 continue
         else:
             p1, p2, p3, p4 = box_ocr_res
-            text, score = "", 1
+            text, score = '', 1
         # average_angle_degrees = calculate_angle_degrees(box_ocr_res[0])
         # if average_angle_degrees > 0.5:
         poly = [p1, p2, p3, p4]

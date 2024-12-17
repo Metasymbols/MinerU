@@ -28,11 +28,10 @@ export const PDF_COLOR_PICKER = {
       fill: 'rgba(150, 232, 172, 0.4)'
     }
   };
-  
+
   export const DEFAULT_COLOR_SECTION = {
     line: 'rgba(166, 113, 230, 1)',
     fill: 'rgba(166, 113, 230, 0.4)'
   };
-  
+
   export const PDF_TEMPLATE_URL_KEY = 't';
-  

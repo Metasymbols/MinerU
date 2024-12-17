@@ -1,13 +1,14 @@
 import re
+
 import wordninja
+
 from .libs.language import detect_lang
 from .libs.markdown_utils import ocr_escape_special_markdown_char
 from .libs.ocr_content_type import BlockType, ContentType
 
 
 def __is_hyphen_at_line_end(line):
-    """
-    Check if a line ends with one or more letters followed by a hyphen.
+    """Check if a line ends with one or more letters followed by a hyphen.
 
     Args:
     line (str): The line of text to check.

@@ -1,5 +1,5 @@
 
-Install 
+Install
 ===============================================================
 If you encounter any installation issues, please first consult the :doc:`../../additional_notes/faq`.
 If the parsing results are not as expected, refer to the :doc:`../../additional_notes/known_issues`.
@@ -104,7 +104,7 @@ Download model weight files
 
     pip install huggingface_hub
     wget https://github.com/opendatalab/MinerU/raw/master/scripts/download_models_hf.py -O download_models_hf.py
-    python download_models_hf.py    
+    python download_models_hf.py
 
 
 The MinerU is installed, Check out :doc:`../quick_start` or reading :doc:`boost_with_cuda` for accelerate inference

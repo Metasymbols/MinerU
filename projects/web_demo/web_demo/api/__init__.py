@@ -1,9 +1,8 @@
 import os
 
+from api.extensions import app, db, jwt, ma, migrate
 from common.logger import setup_log
 from common.web_hook import before_request
-
-from api.extensions import app, db, jwt, ma, migrate
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -16,12 +15,12 @@ def _register_db(flask_app):
 
 
 def create_app(config):
-    """
-    Create and configure an instance of the Flask application
+    """Create and configure an instance of the Flask application.
+
     :param config:
     :return:
     """
-    app.static_folder = os.path.join(root_dir, "static")
+    app.static_folder = os.path.join(root_dir, 'static')
     if config is None:
         config = {}
     app.config.update(config)

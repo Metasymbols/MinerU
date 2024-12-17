@@ -1,12 +1,13 @@
-"""
-get cov
-"""
-from bs4 import BeautifulSoup
+"""get cov."""
 import shutil
+
+from bs4 import BeautifulSoup
+
+
 def get_covrage():
-    """get covrage"""
+    """get covrage."""
     # 发送请求获取网页内容
-    html_content = open("htmlcov/index.html", "r", encoding="utf-8").read()
+    html_content = open('htmlcov/index.html', 'r', encoding='utf-8').read()
     soup = BeautifulSoup(html_content, 'html.parser')
 
     # 查找包含"pc_cov"的span标签
@@ -15,7 +16,7 @@ def get_covrage():
     # 提取百分比值
     percentage_value = pc_cov_span.text.strip()
     percentage_float = float(percentage_value.rstrip('%'))
-    print ("percentage_float:", percentage_float)
+    print ('percentage_float:', percentage_float)
     assert percentage_float >= 0.2
 
 if __name__ == '__main__':

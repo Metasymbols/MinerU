@@ -1,7 +1,7 @@
+import copy
 import json
 import os
 from typing import Callable
-import copy
 
 from magic_pdf.config.make_content_config import DropMode, MakeMode
 from magic_pdf.data.data_reader_writer import DataWriter

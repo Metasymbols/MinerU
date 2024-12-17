@@ -16,13 +16,13 @@
         background: #3477EB;
     }
   }
-  
+
   .linearBlue {
     // TIP： 这里为啥用bg呢，因为ui稿给的参数是假的
     background: url('@/assets/pdf/pdf-upload.png');
     background-size: cover;
   }
-  
+
   .tryText {
       font-size: 13px;
       line-height: 20px;
@@ -31,8 +31,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
   }
-  
+
   .extractorContainer {
     min-width: $page-min-witch;
   }
-  

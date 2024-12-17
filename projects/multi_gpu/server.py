@@ -1,13 +1,15 @@
-import os
-import fitz
-import torch
 import base64
-import litserve as ls
+import os
 from uuid import uuid4
+
+import fitz
+import litserve as ls
+import torch
 from fastapi import HTTPException
 from filetype import guess_extension
-from magic_pdf.tools.common import do_parse
+
 from magic_pdf.model.doc_analyze_by_custom_model import ModelSingleton
+from magic_pdf.tools.common import do_parse
 
 
 class MinerUAPI(ls.LitAPI):

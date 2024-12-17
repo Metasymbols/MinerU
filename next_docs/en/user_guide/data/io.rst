@@ -2,8 +2,8 @@
 IO
 ===
 
-Aims for read or write bytes from different media, Currently We provide ``S3Reader``, ``S3Writer`` for AWS S3 compatible media 
-and ``HttpReader``, ``HttpWriter`` for remote Http file. You can implement new classes to meet the needs of your personal scenarios 
+Aims for read or write bytes from different media, Currently We provide ``S3Reader``, ``S3Writer`` for AWS S3 compatible media
+and ``HttpReader``, ``HttpWriter`` for remote Http file. You can implement new classes to meet the needs of your personal scenarios
 if MinerU have not provide the suitable classes. It is easy to implement new classes, the only one requirement is to inherit from
 ``IOReader`` or ``IOWriter``
 
@@ -22,4 +22,3 @@ if MinerU have not provide the suitable classes. It is easy to implement new cla
             pass
 
 Check :doc:`../../api/io` for more details
-
