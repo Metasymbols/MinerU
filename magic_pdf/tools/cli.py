@@ -21,14 +21,14 @@ image_suffixes = ['.png', '.jpeg', '.jpg']
 @click.version_option(__version__,
                       '--version',
                       '-v',
-                      help='display the version and exit')
+                      help='显示版本信息并退出')
 @click.option(
     '-p',
     '--path',
     'path',
     type=click.Path(exists=True),
     required=True,
-    help='local filepath or directory. support PDF, PPT, PPTX, DOC, DOCX, PNG, JPG files',
+    help='本地文件路径或目录。支持的文件格式：PDF、PPT、PPTX、DOC、DOCX、PNG、JPG',
 )
 @click.option(
     '-o',
@@ -36,7 +36,7 @@ image_suffixes = ['.png', '.jpeg', '.jpg']
     'output_dir',
     type=click.Path(),
     required=True,
-    help='output local directory',
+    help='输出结果的本地目录路径',
 )
 @click.option(
     '-m',
@@ -56,8 +56,8 @@ without method specified, auto will be used by default.""",
     'lang',
     type=str,
     help="""
-    Input the languages in the pdf (if known) to improve OCR accuracy.  Optional.
-    You should input "Abbreviation" with language form url:
+    输入PDF文档中的语言（如果已知）以提高OCR准确性。可选参数。
+    您需要输入语言的"缩写代码"，支持的语言列表请参考：
     https://paddlepaddle.github.io/PaddleOCR/latest/en/ppocr/blog/multi_languages.html#5-support-languages-and-abbreviations
     """,
     default=None,
@@ -67,7 +67,7 @@ without method specified, auto will be used by default.""",
     '--debug',
     'debug_able',
     type=bool,
-    help='Enables detailed debugging information during the execution of the CLI commands.',
+    help='在执行CLI命令期间启用详细的调试信息输出。',
     default=False,
 )
 @click.option(
@@ -75,7 +75,7 @@ without method specified, auto will be used by default.""",
     '--start',
     'start_page_id',
     type=int,
-    help='The starting page for PDF parsing, beginning from 0.',
+    help='PDF解析的起始页码（从0开始计数）。',
     default=0,
 )
 @click.option(
@@ -83,7 +83,7 @@ without method specified, auto will be used by default.""",
     '--end',
     'end_page_id',
     type=int,
-    help='The ending page for PDF parsing, beginning from 0.',
+    help='PDF解析的结束页码（从0开始计数）。',
     default=None,
 )
 def cli(path, output_dir, method, lang, debug_able, start_page_id, end_page_id):

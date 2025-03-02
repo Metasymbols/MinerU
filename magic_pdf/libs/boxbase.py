@@ -2,7 +2,15 @@ import math
 
 
 def _is_in_or_part_overlap(box1, box2) -> bool:
-    """两个bbox是否有部分重叠或者包含."""
+    """判断两个边界框(bbox)是否有部分重叠或包含关系。
+
+    Args:
+        box1: 第一个边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 第二个边界框，格式同box1
+
+    Returns:
+        bool: 如果两个边界框有重叠或包含关系返回True，否则返回False
+    """
     if box1 is None or box2 is None:
         return False
 
@@ -18,7 +26,16 @@ def _is_in_or_part_overlap(box1, box2) -> bool:
 def _is_in_or_part_overlap_with_area_ratio(box1,
                                            box2,
                                            area_ratio_threshold=0.6):
-    """判断box1是否在box2里面，或者box1和box2有部分重叠，且重叠面积占box1的比例超过area_ratio_threshold."""
+    """判断两个边界框的重叠程度是否超过指定阈值。
+
+    Args:
+        box1: 第一个边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 第二个边界框，格式同box1
+        area_ratio_threshold: 重叠面积比例阈值，默认为0.6
+
+    Returns:
+        bool: 如果box1和box2的重叠面积占box1面积的比例超过阈值，返回True，否则返回False
+    """
     if box1 is None or box2 is None:
         return False
 
@@ -42,7 +59,15 @@ def _is_in_or_part_overlap_with_area_ratio(box1,
 
 
 def _is_in(box1, box2) -> bool:
-    """box1是否完全在box2里面."""
+    """判断一个边界框是否完全包含在另一个边界框内。
+
+    Args:
+        box1: 待判断的边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 参考边界框，格式同box1
+
+    Returns:
+        bool: 如果box1完全在box2内部返回True，否则返回False
+    """
     x0_1, y0_1, x1_1, y1_1 = box1
     x0_2, y0_2, x1_2, y1_2 = box2
 
@@ -53,7 +78,15 @@ def _is_in(box1, box2) -> bool:
 
 
 def _is_part_overlap(box1, box2) -> bool:
-    """两个bbox是否有部分重叠，但不完全包含."""
+    """判断两个边界框是否部分重叠但不完全包含。
+
+    Args:
+        box1: 第一个边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 第二个边界框，格式同box1
+
+    Returns:
+        bool: 如果两个边界框部分重叠但不完全包含返回True，否则返回False
+    """
     if box1 is None or box2 is None:
         return False
 
@@ -61,7 +94,15 @@ def _is_part_overlap(box1, box2) -> bool:
 
 
 def _left_intersect(left_box, right_box):
-    """检查两个box的左边界是否有交集，也就是left_box的右边界是否在right_box的左边界内."""
+    """检查两个边界框在左边界处是否相交。
+
+    Args:
+        left_box: 左侧边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        right_box: 右侧边界框，格式同left_box
+
+    Returns:
+        bool: 如果left_box的右边界与right_box的左边界相交返回True，否则返回False
+    """
     if left_box is None or right_box is None:
         return False
 
@@ -73,7 +114,15 @@ def _left_intersect(left_box, right_box):
 
 
 def _right_intersect(left_box, right_box):
-    """检查box是否在右侧边界有交集，也就是left_box的左边界是否在right_box的右边界内."""
+    """检查两个边界框在右边界处是否相交。
+
+    Args:
+        left_box: 左侧边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        right_box: 右侧边界框，格式同left_box
+
+    Returns:
+        bool: 如果left_box的左边界与right_box的右边界相交返回True，否则返回False
+    """
     if left_box is None or right_box is None:
         return False
 
@@ -85,7 +134,20 @@ def _right_intersect(left_box, right_box):
 
 
 def _is_vertical_full_overlap(box1, box2, x_torlence=2):
-    """x方向上：要么box1包含box2, 要么box2包含box1。不能部分包含 y方向上：box1和box2有重叠."""
+    """判断两个边界框在垂直方向上是否完全重叠。
+
+    Args:
+        box1: 第一个边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 第二个边界框，格式同box1
+        x_torlence: x方向上的容差值，默认为2
+
+    Returns:
+        bool: 如果两个边界框在x方向上互相包含且在y方向上有重叠返回True，否则返回False
+
+    Note:
+        x方向上的判断条件：box1包含box2或box2包含box1，不允许部分包含
+        y方向上的判断条件：box1和box2必须有重叠部分
+    """
     # 解析box的坐标
     x11, y11, x12, y12 = box1  # 左上角和右下角的坐标 (x1, y1, x2, y2)
     x21, y21, x22, y22 = box2
@@ -101,8 +163,19 @@ def _is_vertical_full_overlap(box1, box2, x_torlence=2):
 
 
 def _is_bottom_full_overlap(box1, box2, y_tolerance=2):
-    """检查box1下方和box2的上方有轻微的重叠，轻微程度收到y_tolerance的限制 这个函数和_is_vertical-
-    full_overlap的区别是，这个函数允许box1和box2在x方向上有轻微的重叠,允许一定的模糊度."""
+    """检查两个边界框在垂直方向上是否有轻微重叠。
+
+    Args:
+        box1: 上方边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 下方边界框，格式同box1
+        y_tolerance: y方向上允许的重叠容差值，默认为2
+
+    Returns:
+        bool: 如果box1的下边界与box2的上边界有轻微重叠且x方向上基本对齐返回True，否则返回False
+
+    Note:
+        与_is_vertical_full_overlap的区别是本函数允许x方向上有轻微的重叠，更适合检测垂直排列的文本块
+    """
     if box1 is None or box2 is None:
         return False
 
@@ -123,8 +196,20 @@ def _is_left_overlap(
     box1,
     box2,
 ):
-    """检查box1的左侧是否和box2有重叠 在Y方向上可以是部分重叠或者是完全重叠。不分box1和box2的上下关系，也就是无论box1在box2下
-    方还是box2在box1下方，都可以检测到重叠。 X方向上."""
+    """检查两个边界框在水平方向上是否有左侧重叠。
+
+    Args:
+        box1: 第一个边界框，格式为 [x0, y0, x1, y1]，表示左上角和右下角坐标
+        box2: 第二个边界框，格式同box1
+
+    Returns:
+        bool: 如果box1的左侧与box2有重叠返回True，否则返回False
+
+    Note:
+        1. Y方向上允许部分重叠或完全重叠
+        2. 不考虑box1和box2的上下位置关系
+        3. 重叠判定基于投影重叠面积比例
+    """
 
     def __overlap_y(Ay1, Ay2, By1, By2):
         return max(0, min(Ay2, By2) - max(Ay1, By1))
@@ -147,7 +232,16 @@ def _is_left_overlap(
 def __is_overlaps_y_exceeds_threshold(bbox1,
                                       bbox2,
                                       overlap_ratio_threshold=0.8):
-    """检查两个bbox在y轴上是否有重叠，并且该重叠区域的高度占两个bbox高度更低的那个超过80%"""
+    """检查两个边界框在y轴方向上的重叠程度是否超过阈值。
+
+    Args:
+        bbox1: 第一个边界框，格式为 [x0, y0, x1, y1]
+        bbox2: 第二个边界框，格式同bbox1
+        overlap_ratio_threshold: 重叠比例阈值，默认为0.8
+
+    Returns:
+        bool: 如果重叠区域高度占较小边界框高度的比例超过阈值，返回True，否则返回False
+    """
     _, y0_1, _, y1_1 = bbox1
     _, y0_2, _, y1_2 = bbox2
 
@@ -196,7 +290,15 @@ def calculate_iou(bbox1, bbox2):
 
 
 def calculate_overlap_area_2_minbox_area_ratio(bbox1, bbox2):
-    """计算box1和box2的重叠面积占最小面积的box的比例."""
+    """计算两个边界框的重叠面积占较小边界框面积的比例。
+
+    Args:
+        bbox1: 第一个边界框，格式为 [x0, y0, x1, y1]
+        bbox2: 第二个边界框，格式同bbox1
+
+    Returns:
+        float: 重叠面积与较小边界框面积的比值，范围[0, 1]
+    """
     # Determine the coordinates of the intersection rectangle
     x_left = max(bbox1[0], bbox2[0])
     y_top = max(bbox1[1], bbox2[1])
@@ -217,7 +319,15 @@ def calculate_overlap_area_2_minbox_area_ratio(bbox1, bbox2):
 
 
 def calculate_overlap_area_in_bbox1_area_ratio(bbox1, bbox2):
-    """计算box1和box2的重叠面积占bbox1的比例."""
+    """计算box1和box2的重叠面积占bbox1的比例。
+
+    Args:
+        bbox1: 第一个边界框，格式为 [x0, y0, x1, y1]
+        bbox2: 第二个边界框，格式同bbox1
+
+    Returns:
+        float: 重叠面积占bbox1面积的比例，范围[0, 1]
+    """
     # Determine the coordinates of the intersection rectangle
     x_left = max(bbox1[0], bbox2[0])
     y_top = max(bbox1[1], bbox2[1])
@@ -237,8 +347,16 @@ def calculate_overlap_area_in_bbox1_area_ratio(bbox1, bbox2):
 
 
 def get_minbox_if_overlap_by_ratio(bbox1, bbox2, ratio):
-    """通过calculate_overlap_area_2_minbox_area_ratio计算两个bbox重叠的面积占最小面积的box的比例
-    如果比例大于ratio，则返回小的那个bbox, 否则返回None."""
+    """根据重叠比例返回较小的边界框。
+
+    Args:
+        bbox1: 第一个边界框，格式为 [x0, y0, x1, y1]
+        bbox2: 第二个边界框，格式同bbox1
+        ratio: 重叠面积比例阈值
+
+    Returns:
+        list: 如果重叠面积占较小边界框面积的比例大于ratio，返回面积较小的边界框；否则返回None
+    """
     x1_min, y1_min, x1_max, y1_max = bbox1
     x2_min, y2_min, x2_max, y2_max = bbox2
     area1 = (x1_max - x1_min) * (y1_max - y1_min)
@@ -254,6 +372,15 @@ def get_minbox_if_overlap_by_ratio(bbox1, bbox2, ratio):
 
 
 def get_bbox_in_boundary(bboxes: list, boundary: tuple) -> list:
+    """获取完全在指定边界内的所有边界框。
+
+    Args:
+        bboxes: 边界框列表，每个边界框格式为 [x0, y0, x1, y1]
+        boundary: 边界范围，格式为 (x0, y0, x1, y1)
+
+    Returns:
+        list: 完全在boundary内的边界框列表
+    """
     x0, y0, x1, y1 = boundary
     new_boxes = [
         box for box in bboxes
@@ -263,7 +390,17 @@ def get_bbox_in_boundary(bboxes: list, boundary: tuple) -> list:
 
 
 def is_vbox_on_side(bbox, width, height, side_threshold=0.2):
-    """判断一个bbox是否在pdf页面的边缘."""
+    """判断边界框是否位于页面边缘。
+
+    Args:
+        bbox: 边界框，格式为 [x0, y0, x1, y1]
+        width: 页面宽度
+        height: 页面高度
+        side_threshold: 边缘阈值，默认为0.2，表示页面宽度的20%
+
+    Returns:
+        bool: 如果边界框位于页面左边缘或右边缘返回True，否则返回False
+    """
     x0, x1 = bbox[0], bbox[2]
     if x1 <= width * side_threshold or x0 >= width * (1 - side_threshold):
         return True

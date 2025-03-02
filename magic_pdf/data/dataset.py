@@ -14,20 +14,31 @@ from magic_pdf.filter import classify
 class PageableData(ABC):
     @abstractmethod
     def get_image(self) -> dict:
-        """Transform data to image."""
+        """
+        将数据转换为图像格式。
+
+        返回:
+            dict: 包含图像数据的字典
+        """
         pass
 
     @abstractmethod
     def get_doc(self) -> fitz.Page:
-        """Get the pymudoc page."""
+        """
+        获取PyMuPDF页面对象。
+
+        返回:
+            fitz.Page: PyMuPDF页面对象
+        """
         pass
 
     @abstractmethod
     def get_page_info(self) -> PageInfo:
-        """Get the page info of the page.
+        """
+        获取页面的基本信息。
 
-        Returns:
-            PageInfo: the page info of this page
+        返回:
+            PageInfo: 包含页面基本信息的对象
         """
         pass
 
@@ -61,26 +72,42 @@ class PageableData(ABC):
 class Dataset(ABC):
     @abstractmethod
     def __len__(self) -> int:
-        """The length of the dataset."""
+        """
+        获取数据集的长度。
+
+        返回:
+            int: 数据集中的页面数量
+        """
         pass
 
     @abstractmethod
     def __iter__(self) -> Iterator[PageableData]:
-        """Yield the page data."""
+        """
+        返回数据集的迭代器。
+
+        返回:
+            Iterator[PageableData]: 可以遍历的页面数据迭代器
+        """
         pass
 
     @abstractmethod
     def supported_methods(self) -> list[SupportedPdfParseMethod]:
-        """The methods that this dataset support.
+        """
+        获取该数据集支持的解析方法。
 
-        Returns:
-            list[SupportedPdfParseMethod]: The supported methods, Valid methods are: OCR, TXT
+        返回:
+            list[SupportedPdfParseMethod]: 支持的解析方法列表，有效的方法包括：OCR、TXT
         """
         pass
 
     @abstractmethod
     def data_bits(self) -> bytes:
-        """The bits used to create this dataset."""
+        """
+        获取用于创建此数据集的原始字节数据。
+
+        返回:
+            bytes: 原始PDF文件的字节数据
+        """
         pass
 
     @abstractmethod
@@ -97,10 +124,10 @@ class Dataset(ABC):
 
     @abstractmethod
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """将数据集保存为PDF文件。
 
-        Args: 
-            file_path (str): the file path 
+        参数:
+            file_path (str): 保存文件的路径
         """
         pass
 
@@ -119,26 +146,30 @@ class Dataset(ABC):
 
     @abstractmethod
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """对数据集进行分类。
 
-        Returns:
-            SupportedPdfParseMethod: _description_
+        返回:
+            SupportedPdfParseMethod: 数据集支持的解析方法
         """
         pass
 
     @abstractmethod
     def clone(self):
-        """clone this dataset
+        """创建数据集的副本。
+
+        返回:
+            PymuDocDataset: 数据集的新实例
         """
         pass
 
 
 class PymuDocDataset(Dataset):
     def __init__(self, bits: bytes, lang=None):
-        """Initialize the dataset, which wraps the pymudoc documents.
+        """初始化数据集，封装PyMuPDF文档对象。
 
-        Args:
-            bits (bytes): the bytes of the pdf
+        参数:
+            bits (bytes): PDF文件的字节数据
+            lang (str, optional): 文档语言，可以是具体的语言代码，'auto'表示自动检测，空字符串或None表示不指定语言
         """
         self._raw_fitz = fitz.open('pdf', bits)
         self._records = [Doc(v) for v in self._raw_fitz]
@@ -155,41 +186,53 @@ class PymuDocDataset(Dataset):
             self._lang = lang
             logger.info(f"lang: {lang}")
     def __len__(self) -> int:
-        """The page number of the pdf."""
+        """获取PDF文档的总页数。
+
+        返回:
+            int: PDF文档的页数
+        """        
         return len(self._records)
 
     def __iter__(self) -> Iterator[PageableData]:
-        """Yield the page doc object."""
+        """返回文档页面的迭代器。
+
+        返回:
+            Iterator[PageableData]: 可以遍历的页面对象迭代器
+        """
         return iter(self._records)
 
     def supported_methods(self) -> list[SupportedPdfParseMethod]:
-        """The method supported by this dataset.
+        """获取该数据集支持的解析方法。
 
-        Returns:
-            list[SupportedPdfParseMethod]: the supported methods
+        返回:
+            list[SupportedPdfParseMethod]: 支持的解析方法列表，包括OCR和TXT
         """
         return [SupportedPdfParseMethod.OCR, SupportedPdfParseMethod.TXT]
 
     def data_bits(self) -> bytes:
-        """The pdf bits used to create this dataset."""
+        """获取用于创建此数据集的PDF文件字节数据。
+
+        返回:
+            bytes: PDF文件的原始字节数据
+        """
         return self._data_bits
 
     def get_page(self, page_id: int) -> PageableData:
-        """The page doc object.
+        """获取指定页码的页面对象。
 
-        Args:
-            page_id (int): the page doc index
+        参数:
+            page_id (int): 页面索引
 
-        Returns:
-            PageableData: the page doc object
+        返回:
+            PageableData: 页面对象
         """
         return self._records[page_id]
 
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """将数据集保存为PDF文件。
 
-        Args: 
-            file_path (str): the file path 
+        参数:
+            file_path (str): 保存文件的路径
         """
         
         dir_name = os.path.dirname(file_path)
@@ -198,39 +241,42 @@ class PymuDocDataset(Dataset):
         self._raw_fitz.save(file_path)
 
     def apply(self, proc: Callable, *args, **kwargs):
-        """Apply callable method which.
+        """应用可调用方法到数据集。
 
-        Args:
-            proc (Callable): invoke proc as follows:
+        参数:
+            proc (Callable): 要应用的处理函数，将按如下方式调用：
                 proc(dataset, *args, **kwargs)
 
-        Returns:
-            Any: return the result generated by proc
+        返回:
+            Any: 处理函数返回的结果
         """
         if 'lang' in kwargs and self._lang is not None:
             kwargs['lang'] = self._lang
         return proc(self, *args, **kwargs)
 
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """对数据集进行分类。
 
-        Returns:
-            SupportedPdfParseMethod: _description_
+        返回:
+            SupportedPdfParseMethod: 数据集支持的解析方法
         """
         return classify(self._data_bits)
 
     def clone(self):
-        """clone this dataset
+        """创建数据集的副本。
+
+        返回:
+            PymuDocDataset: 数据集的新实例
         """
         return PymuDocDataset(self._raw_data)
 
 
 class ImageDataset(Dataset):
     def __init__(self, bits: bytes):
-        """Initialize the dataset, which wraps the pymudoc documents.
+        """初始化图像数据集，将图像转换为PDF并封装为文档对象。
 
-        Args:
-            bits (bytes): the bytes of the photo which will be converted to pdf first. then converted to pymudoc.
+        参数:
+            bits (bytes): 图像文件的字节数据，将首先转换为PDF，然后转换为PyMuPDF文档对象
         """
         pdf_bytes = fitz.open(stream=bits).convert_to_pdf()
         self._raw_fitz = fitz.open('pdf', pdf_bytes)
@@ -239,41 +285,53 @@ class ImageDataset(Dataset):
         self._data_bits = pdf_bytes
 
     def __len__(self) -> int:
-        """The length of the dataset."""
+        """获取数据集的长度。
+
+        返回:
+            int: 数据集中的页面数量
+        """
         return len(self._records)
 
     def __iter__(self) -> Iterator[PageableData]:
-        """Yield the page object."""
+        """返回数据集的迭代器。
+
+        返回:
+            Iterator[PageableData]: 可以遍历的页面对象迭代器
+        """
         return iter(self._records)
 
     def supported_methods(self):
-        """The method supported by this dataset.
+        """获取该数据集支持的解析方法。
 
-        Returns:
-            list[SupportedPdfParseMethod]: the supported methods
+        返回:
+            list[SupportedPdfParseMethod]: 支持的解析方法列表
         """
         return [SupportedPdfParseMethod.OCR]
 
     def data_bits(self) -> bytes:
-        """The pdf bits used to create this dataset."""
+        """获取用于创建此数据集的PDF文件字节数据。
+
+        返回:
+            bytes: PDF文件的原始字节数据
+        """
         return self._data_bits
 
     def get_page(self, page_id: int) -> PageableData:
-        """The page doc object.
+        """获取指定页码的页面对象。
 
-        Args:
-            page_id (int): the page doc index
+        参数:
+            page_id (int): 页面索引
 
-        Returns:
-            PageableData: the page doc object
+        返回:
+            PageableData: 页面对象
         """
         return self._records[page_id]
 
     def dump_to_file(self, file_path: str):
-        """Dump the file
+        """将数据集保存为PDF文件。
 
-        Args: 
-            file_path (str): the file path 
+        参数:
+            file_path (str): 保存文件的路径
         """
         dir_name = os.path.dirname(file_path)
         if dir_name not in ('', '.', '..'):
@@ -281,61 +339,68 @@ class ImageDataset(Dataset):
         self._raw_fitz.save(file_path)
 
     def apply(self, proc: Callable, *args, **kwargs):
-        """Apply callable method which.
+        """应用可调用方法到数据集。
 
-        Args:
-            proc (Callable): invoke proc as follows:
+        参数:
+            proc (Callable): 要应用的处理函数，将按如下方式调用：
                 proc(dataset, *args, **kwargs)
 
-        Returns:
-            Any: return the result generated by proc
+        返回:
+            Any: 处理函数返回的结果
         """
         return proc(self, *args, **kwargs)
 
     def classify(self) -> SupportedPdfParseMethod:
-        """classify the dataset 
+        """对数据集进行分类。
 
-        Returns:
-            SupportedPdfParseMethod: _description_
+        返回:
+            SupportedPdfParseMethod: 数据集支持的解析方法
         """
         return SupportedPdfParseMethod.OCR
 
     def clone(self):
-        """clone this dataset
+        """创建数据集的副本。
+
+        返回:
+            PymuDocDataset: 数据集的新实例
         """
         return ImageDataset(self._raw_data)
 
 class Doc(PageableData):
-    """Initialized with pymudoc object."""
+    """使用PyMuPDF页面对象初始化的文档类。"""
 
     def __init__(self, doc: fitz.Page):
+        """初始化文档对象。
+
+        参数:
+            doc (fitz.Page): PyMuPDF页面对象
+        """
         self._doc = doc
 
     def get_image(self):
-        """Return the image info.
+        """获取页面的图像信息。
 
-        Returns:
-            dict: {
-                img: np.ndarray,
-                width: int,
-                height: int
-            }
+        返回:
+            dict: 包含以下键值的字典：
+                img: np.ndarray类型的图像数组
+                width: 图像宽度
+                height: 图像高度
         """
         return fitz_doc_to_image(self._doc)
 
     def get_doc(self) -> fitz.Page:
-        """Get the pymudoc object.
+        """获取PyMuPDF页面对象。
 
-        Returns:
-            fitz.Page: the pymudoc object
+        返回:
+            fitz.Page: PyMuPDF页面对象
         """
         return self._doc
 
     def get_page_info(self) -> PageInfo:
-        """Get the page info of the page.
+        """获取页面的基本信息。
 
-        Returns:
-            PageInfo: the page info of this page
+        返回:
+            PageInfo: 包含页面宽度和高度的信息对象
         """
         page_w = self._doc.rect.width
         page_h = self._doc.rect.height

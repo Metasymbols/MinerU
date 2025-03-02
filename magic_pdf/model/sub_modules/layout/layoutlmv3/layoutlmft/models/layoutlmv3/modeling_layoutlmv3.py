@@ -48,7 +48,16 @@ logger = logging.get_logger(__name__)
 
 
 class PatchEmbed(nn.Module):
-    """ Image to Patch Embedding
+    """ 
+    图像到Patch嵌入转换模块
+    
+    将输入图像划分为固定大小的patches，并通过卷积层将每个patch映射到指定维度的嵌入向量。
+    
+    参数:
+        img_size (int): 输入图像的大小，默认为224
+        patch_size (int): patch的大小，默认为16
+        in_chans (int): 输入图像的通道数，默认为3
+        embed_dim (int): 输出嵌入向量的维度，默认为768
     """
     def __init__(self, img_size=224, patch_size=16, in_chans=3, embed_dim=768):
         super().__init__()

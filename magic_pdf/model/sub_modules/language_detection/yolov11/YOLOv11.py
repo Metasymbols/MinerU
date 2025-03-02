@@ -85,15 +85,37 @@ def resize_images_to_224(image):
 
 
 class YOLOv11LangDetModel(object):
+    """
+    YOLOv11语言检测模型类
+    
+    该类实现了基于YOLOv11的语言检测功能，可以对输入图片进行语言类型识别。
+    支持批量处理和单张图片处理，可以处理不同尺寸的图片输入。
+    """
     def __init__(self, langdetect_model_weight, device):
+        """
+        初始化YOLOv11语言检测模型
 
+        参数:
+            langdetect_model_weight (str): 模型权重文件路径
+            device (str): 运行设备，支持CPU、GPU和NPU
+        """
         self.model = YOLO(langdetect_model_weight)
 
         if str(device).startswith("npu"):
             self.device = torch.device(device)
         else:
             self.device = device
+
     def do_detect(self, images: list):
+        """
+        对多张图片进行语言检测
+
+        参数:
+            images (list): 待检测的图片列表，每个元素为PIL.Image对象
+
+        返回:
+            str: 检测到的主要语言类型，如果无法检测则返回None
+        """
         all_images = []
         for image in images:
             width, height = image.size
@@ -114,13 +136,31 @@ class YOLOv11LangDetModel(object):
         return language
 
     def predict(self, image):
+        """
+        对单张图片进行语言检测
+
+        参数:
+            image (PIL.Image): 待检测的图片
+
+        返回:
+            str: 检测到的语言类型
+        """
         results = self.model.predict(image, verbose=False, device=self.device)
         predicted_class_id = int(results[0].probs.top1)
         predicted_class_name = self.model.names[predicted_class_id]
         return predicted_class_name
 
-
     def batch_predict(self, images: list, batch_size: int) -> list:
+        """
+        批量预测图片的语言类型
+
+        参数:
+            images (list): 待检测的图片列表
+            batch_size (int): 批处理大小
+
+        返回:
+            list: 每张图片对应的语言类型列表
+        """
         images_lang_res = []
 
         for index in range(0, len(images), batch_size):
