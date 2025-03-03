@@ -46,125 +46,32 @@ def __process_blocks(blocks: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]
         blocks: 需要处理的blocks列表
         
     Returns:
-        分组后的blocks列表
+        分组后的blocks列表，每个分组包含相邻的文本块，由标题或行间公式分隔
     """
     result = []
     current_group = []
-
-    for i, current_block in enumerate(blocks):
-        if current_block['type'] == 'text':
-            current_block['bbox_fs'] = copy.deepcopy(current_block['bbox'])
-            if 'lines' in current_block and current_block['lines']:
-                lines = current_block['lines']
-                current_block['bbox_fs'] = [
-                    min(line['bbox'][0] for line in lines),
-                    min(line['bbox'][1] for line in lines),
-                    max(line['bbox'][2] for line in lines),
-                    max(line['bbox'][3] for line in lines),
-                ]
-            current_group.append(current_block)
-
-        if i + 1 < len(blocks):
-            next_block = blocks[i + 1]
-            if next_block['type'] in ['title', 'interline_equation']:
-                result.append(current_group)
-                current_group = []
-
-    if current_group:
-        result.append(current_group)
-
-    return result
-
-def __is_line_aligned_left(line_bbox: List[float], block_bbox: List[float], line_height: float) -> bool:
-    """判断行是否左对齐"""
-    return abs(block_bbox[0] - line_bbox[0]) < line_height * LINE_HEIGHT_RATIO
-
-def __is_line_aligned_right(line_bbox: List[float], block_bbox: List[float], line_height: float) -> bool:
-    """判断行是否右对齐"""
-    return abs(block_bbox[2] - line_bbox[2]) < line_height
-
-def __get_line_text(line: Dict[str, Any]) -> str:
-    """获取行文本内容"""
-    return ''.join(span['content'].strip() for span in line['spans'] 
-                   if span['type'] == ContentType.Text)
 
 def __is_list_or_index_block(block: Dict[str, Any]) -> str:
     """判断block是否为列表或索引类型
     
     Args:
-        block: 需要判断的block
+        block: 需要判断的block，包含行信息和边界框信息
         
     Returns:
-        block的类型
+        block的类型，可能为'text'、'list'或'index'
     """
     if len(block['lines']) < 2:
         return BlockType.Text
-        
-    first_line = block['lines'][0]
-    last_line = block['lines'][-1]
-    line_height = first_line['bbox'][3] - first_line['bbox'][1]
-    block_bbox = block['bbox_fs']
-    block_width = block_bbox[2] - block_bbox[0]
-    block_height = block_bbox[3] - block_bbox[1]
-    page_width, _ = block['page_size']
-    
-    block_width_ratio = page_width and block_width / page_width or 0
-    
-    # 统计行对齐信息
-    alignment_stats = {
-        'left_aligned': 0,
-        'left_indented': 0,
-        'right_aligned': 0,
-        'right_indented': 0,
-        'center_aligned': 0,
-        'both_sides_indented': 0
-    }
-    
-    lines_text = []
-    for line in block['lines']:
-        line_bbox = line['bbox']
-        line_mid_x = (line_bbox[0] + line_bbox[2]) / 2
-        block_mid_x = (block_bbox[0] + block_bbox[2]) / 2
-
-def __para_merge_page(blocks: List[Dict[str, Any]]) -> None:
-    page_text_blocks_groups = __process_blocks(blocks)
-    
-    for text_blocks_group in page_text_blocks_groups:
-        if not text_blocks_group:
-            continue
-            
-        # 在合并前对所有block判断类型
-        for block in text_blocks_group:
-            block['type'] = __is_list_or_index_block(block)
-
-        if len(text_blocks_group) <= 1:
-            continue
-            
-        # 判断是否为列表组
-        is_list_group = __is_list_group(text_blocks_group)
-
-        # 倒序遍历处理相邻块
-        for i in range(len(text_blocks_group) - 1, 0, -1):
-            current_block = text_blocks_group[i]
-            prev_block = text_blocks_group[i - 1]
-
-            if (current_block['type'] == 'text' and 
-                prev_block['type'] == 'text' and 
-                not is_list_group):
-                __merge_2_text_blocks(current_block, prev_block)
-            elif __can_merge_list_blocks(current_block, prev_block):
-                __merge_2_list_blocks(current_block, prev_block)
-
-def __can_merge_list_blocks(block1: Dict[str, Any], block2: Dict[str, Any]) -> bool:
-    """判断两个列表块是否可以合并"""
-    return ((block1['type'] == BlockType.List and block2['type'] == BlockType.List) or
-            (block1['type'] == BlockType.Index and block2['type'] == BlockType.Index))
 
 def para_split(pdf_info_dict: Dict[int, Dict[str, Any]]) -> None:
-    """分割PDF文档的段落
+    """分割PDF文档的段落，将相邻的文本块合并成段落
     
     Args:
-        pdf_info_dict: PDF文档信息字典
+        pdf_info_dict: PDF文档信息字典，包含每页的预处理块信息
+        
+    Note:
+        函数会修改输入的pdf_info_dict，在其中添加para_blocks字段
+        para_blocks包含合并后的段落信息，每个段落包含页码、页面大小等信息
     """
     # 收集所有块
     all_blocks = []

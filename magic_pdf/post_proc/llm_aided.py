@@ -28,7 +28,7 @@ Your corrected result:
 text_optimize_prompt = f"""请根据以下指南修正OCR引起的错误，确保文本连贯并符合原始内容：
 
 1. 修正OCR引起的拼写错误和错误：
-   - 修正常见的OCR错误（例如，'rn' 被误读为 'm'）
+   - 修常常见的OCR错误（例如，'rn' 被误读为 'm'）
    - 使用上下文和常识进行修正
    - 只修正明显的错误，不要不必要的修改内容
    - 不要添加额外的句号或其他不必要的标点符号
@@ -65,9 +65,21 @@ Corrected text:
 """
 
 def llm_aided_formula(pdf_info_dict, formula_aided_config):
+    """使用LLM优化PDF文档中的公式
+    
+    Args:
+        pdf_info_dict: PDF文档信息字典
+        formula_aided_config: 公式优化配置信息，包含API密钥、基础URL和模型名称等
+    """
     pass
 
 def llm_aided_text(pdf_info_dict, text_aided_config):
+    """使用LLM优化PDF文档中的文本
+    
+    Args:
+        pdf_info_dict: PDF文档信息字典
+        text_aided_config: 文本优化配置信息，包含API密钥、基础URL和模型名称等
+    """
     pass
 
 def llm_aided_title(pdf_info_dict, title_aided_config):
