@@ -7,6 +7,45 @@ from magic_pdf.libs.boxbase import (_is_in, bbox_distance, bbox_relative_pos,
                                     calculate_iou)
 from magic_pdf.libs.coordinate_transform import get_scale_ratio
 from magic_pdf.pre_proc.remove_bbox_overlap import _remove_overlap_between_bbox
+import threading
+from typing import Optional
+
+class ModelSingleton:
+    _instance: Optional['ModelSingleton'] = None
+    _lock = threading.Lock()
+    _initialized = False
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+            return cls._instance
+
+    def __init__(self):
+        if not self._initialized:
+            with self._lock:
+                if not self._initialized:
+                    self._model = None
+                    self._initialized = True
+
+    def get_model(self):
+        if self._model is None:
+            with self._lock:
+                if self._model is None:
+                    self._initialize_model()
+        return self._model
+
+    def _initialize_model(self):
+        # 延迟加载模型
+        pass
+
+    def cleanup(self):
+        """清理模型资源"""
+        with self._lock:
+            if self._model is not None:
+                # 执行模型资源清理
+                self._model = None
+                self._initialized = False
 
 CAPATION_OVERLAP_AREA_RATIO = 0.6
 MERGE_BOX_OVERLAP_AREA_RATIO = 1.1

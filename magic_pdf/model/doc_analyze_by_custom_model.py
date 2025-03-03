@@ -1,5 +1,19 @@
+from magic_pdf.operators.models import InferenceResult
+from magic_pdf.model.model_list import MODEL
+from magic_pdf.libs.config_reader import (get_device, get_formula_config,
+                                          get_layout_config,
+                                          get_local_models_dir,
+                                          get_table_recog_config)
+from magic_pdf.libs.clean_memory import clean_memory
+from magic_pdf.data.dataset import Dataset
+import magic_pdf.model as model_config
+from magic_pdf.model.sub_modules.model_utils import get_vram
+from magic_pdf.model.batch_analyze import BatchAnalyze
+from loguru import logger
+import paddle
 import os
 import time
+
 import torch
 
 os.environ['FLAGS_npu_jit_compile'] = '0'  # 关闭paddle的jit编译
@@ -7,13 +21,9 @@ os.environ['FLAGS_use_stride_kernel'] = '0'
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'  # 让mps可以fallback
 os.environ['NO_ALBUMENTATIONS_UPDATE'] = '1'  # 禁止albumentations检查更新
 # 关闭paddle的信号处理
-import paddle
+
 paddle.disable_signal_handler()
 
-from loguru import logger
-
-from magic_pdf.model.batch_analyze import BatchAnalyze
-from magic_pdf.model.sub_modules.model_utils import get_vram
 
 try:
     import torchtext
@@ -22,25 +32,24 @@ try:
 except ImportError:
     pass
 
-import magic_pdf.model as model_config
-from magic_pdf.data.dataset import Dataset
-from magic_pdf.libs.clean_memory import clean_memory
-from magic_pdf.libs.config_reader import (get_device, get_formula_config,
-                                          get_layout_config,
-                                          get_local_models_dir,
-                                          get_table_recog_config)
-from magic_pdf.model.model_list import MODEL
-from magic_pdf.operators.models import InferenceResult
-
 
 class ModelSingleton:
     _instance = None
     _models = {}
+    _lock = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            import threading
+            with threading.Lock():
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._lock = threading.Lock()
         return cls._instance
+
+    def __init__(self):
+        if not hasattr(self, '_initialized'):
+            self._initialized = True
 
     def get_model(
         self,
@@ -52,16 +61,44 @@ class ModelSingleton:
         table_enable=None,
     ):
         key = (ocr, show_log, lang, layout_model, formula_enable, table_enable)
-        if key not in self._models:
-            self._models[key] = custom_model_init(
-                ocr=ocr,
-                show_log=show_log,
-                lang=lang,
-                layout_model=layout_model,
-                formula_enable=formula_enable,
-                table_enable=table_enable,
-            )
-        return self._models[key]
+        with self._lock:
+            if key not in self._models:
+                try:
+                    self._models[key] = custom_model_init(
+                        ocr=ocr,
+                        show_log=show_log,
+                        lang=lang,
+                        layout_model=layout_model,
+                        formula_enable=formula_enable,
+                        table_enable=table_enable,
+                    )
+                except Exception as e:
+                    logger.error(f"Model initialization failed: {str(e)}")
+                    raise
+            return self._models[key]
+
+    def clear_models(self):
+        """清理所有已加载的模型"""
+        with self._lock:
+            for model in self._models.values():
+                try:
+                    if hasattr(model, 'cleanup'):
+                        model.cleanup()
+                except Exception as e:
+                    logger.warning(f"Model cleanup failed: {str(e)}")
+            self._models.clear()
+
+    def remove_model(self, key):
+        """移除指定的模型"""
+        with self._lock:
+            if key in self._models:
+                try:
+                    model = self._models[key]
+                    if hasattr(model, 'cleanup'):
+                        model.cleanup()
+                    del self._models[key]
+                except Exception as e:
+                    logger.warning(f"Model removal failed: {str(e)}")
 
 
 def custom_model_init(
@@ -89,7 +126,8 @@ def custom_model_init(
         if model == MODEL.Paddle:
             from magic_pdf.model.pp_structure_v2 import CustomPaddleModel
 
-            custom_model = CustomPaddleModel(ocr=ocr, show_log=show_log, lang=lang)
+            custom_model = CustomPaddleModel(
+                ocr=ocr, show_log=show_log, lang=lang)
         elif model == MODEL.PEK:
             from magic_pdf.model.pdf_extract_kit import CustomPEKModel
 
@@ -127,7 +165,8 @@ def custom_model_init(
         model_init_cost = time.time() - model_init_start
         logger.info(f'model init cost: {model_init_cost}')
     else:
-        logger.error('use_inside_model is False, not allow to use inside model')
+        logger.error(
+            'use_inside_model is False, not allow to use inside model')
         exit(1)
 
     return custom_model
@@ -144,105 +183,129 @@ def doc_analyze(
     formula_enable=None,
     table_enable=None,
 ) -> InferenceResult:
+    try:
+        end_page_id = (
+            end_page_id
+            if end_page_id is not None and end_page_id >= 0
+            else len(dataset) - 1
+        )
 
-    end_page_id = (
-        end_page_id
-        if end_page_id is not None and end_page_id >= 0
-        else len(dataset) - 1
-    )
+        model_manager = ModelSingleton()
+        custom_model = model_manager.get_model(
+            ocr, show_log, lang, layout_model, formula_enable, table_enable
+        )
 
-    model_manager = ModelSingleton()
-    custom_model = model_manager.get_model(
-        ocr, show_log, lang, layout_model, formula_enable, table_enable
-    )
+        batch_analyze = False
+        batch_ratio = 1
+        device = get_device()
 
-    batch_analyze = False
-    batch_ratio = 1
-    device = get_device()
+        # 检查设备支持
+        npu_support = False
+        if str(device).startswith("npu"):
+            import torch_npu
+            if torch_npu.npu.is_available():
+                npu_support = True
 
-    npu_support = False
-    if str(device).startswith("npu"):
-        import torch_npu
-        if torch_npu.npu.is_available():
-            npu_support = True
+        # 动态调整batch size
+        if torch.cuda.is_available() and device != 'cpu' or npu_support:
+            try:
+                gpu_memory = int(
+                    os.getenv("VIRTUAL_VRAM_SIZE", round(get_vram(device))))
+                if gpu_memory is not None and gpu_memory >= 8:
+                    # 根据显存大小动态调整batch_ratio
+                    batch_ratio = max(1, min(32, 2 ** (int(gpu_memory / 8))))
+                    logger.info(
+                        f'GPU内存: {gpu_memory} GB, 批处理比例: {batch_ratio}')
+                    batch_analyze = True
+            except Exception as e:
+                logger.warning(f"获取GPU内存失败: {str(e)}，使用单页面处理模式")
+                batch_analyze = False
 
-    if torch.cuda.is_available() and device != 'cpu' or npu_support:
-        gpu_memory = int(os.getenv("VIRTUAL_VRAM_SIZE", round(get_vram(device))))
-        if gpu_memory is not None and gpu_memory >= 8:
+        model_json = []
+        doc_analyze_start = time.time()
+        total_pages = end_page_id - start_page_id + 1
 
-            if gpu_memory >= 40:
-                batch_ratio = 32
-            elif gpu_memory >=20:
-                batch_ratio = 16
-            elif gpu_memory >= 16:
-                batch_ratio = 8
-            elif gpu_memory >= 10:
-                batch_ratio = 4
+        try:
+            if batch_analyze:
+                # 批量处理
+                images = []
+                page_wh_list = []
+                for index in range(len(dataset)):
+                    if start_page_id <= index <= end_page_id:
+                        page_data = dataset.get_page(index)
+                        img_dict = page_data.get_image()
+                        images.append(img_dict['img'])
+                        page_wh_list.append(
+                            (img_dict['width'], img_dict['height']))
+
+                # 创建批处理分析器并执行
+                batch_model = BatchAnalyze(
+                    model=custom_model, batch_ratio=batch_ratio)
+                analyze_result = batch_model(images)
+
+                # 处理结果
+                for index in range(len(dataset)):
+                    if start_page_id <= index <= end_page_id:
+                        result = analyze_result.pop(0)
+                        page_width, page_height = page_wh_list.pop(0)
+                    else:
+                        result = []
+                        page_height = 0
+                        page_width = 0
+
+                    page_info = {'page_no': index,
+                                 'width': page_width, 'height': page_height}
+                    page_dict = {'layout_dets': result, 'page_info': page_info}
+                    model_json.append(page_dict)
+
             else:
-                batch_ratio = 2
+                # 单页面处理
+                for index in range(len(dataset)):
+                    page_data = dataset.get_page(index)
+                    img_dict = page_data.get_image()
+                    img = img_dict['img']
+                    page_width = img_dict['width']
+                    page_height = img_dict['height']
 
-            logger.info(f'gpu_memory: {gpu_memory} GB, batch_ratio: {batch_ratio}')
-            batch_analyze = True
+                    if start_page_id <= index <= end_page_id:
+                        page_start = time.time()
+                        try:
+                            result = custom_model(img)
+                            page_time = round(time.time() - page_start, 2)
+                            logger.info(f'页面 {index} 处理完成，耗时: {page_time}秒')
+                        except Exception as e:
+                            logger.error(f"处理页面 {index} 时发生错误: {str(e)}")
+                            result = []
+                    else:
+                        result = []
 
-    model_json = []
-    doc_analyze_start = time.time()
+                    page_info = {'page_no': index,
+                                 'width': page_width, 'height': page_height}
+                    page_dict = {'layout_dets': result, 'page_info': page_info}
+                    model_json.append(page_dict)
 
-    if batch_analyze:
-        # batch analyze
-        images = []
-        page_wh_list = []
-        for index in range(len(dataset)):
-            if start_page_id <= index <= end_page_id:
-                page_data = dataset.get_page(index)
-                img_dict = page_data.get_image()
-                images.append(img_dict['img'])
-                page_wh_list.append((img_dict['width'], img_dict['height']))
-        batch_model = BatchAnalyze(model=custom_model, batch_ratio=batch_ratio)
-        analyze_result = batch_model(images)
+        except Exception as e:
+            logger.error(f"文档分析过程中发生错误: {str(e)}")
+            raise
 
-        for index in range(len(dataset)):
-            if start_page_id <= index <= end_page_id:
-                result = analyze_result.pop(0)
-                page_width, page_height = page_wh_list.pop(0)
-            else:
-                result = []
-                page_height = 0
-                page_width = 0
+        finally:
+            # 清理内存
+            gc_start = time.time()
+            clean_memory(device)
+            gc_time = round(time.time() - gc_start, 2)
+            logger.info(f'内存清理耗时: {gc_time}秒')
 
-            page_info = {'page_no': index, 'width': page_width, 'height': page_height}
-            page_dict = {'layout_dets': result, 'page_info': page_info}
-            model_json.append(page_dict)
+        # 计算并记录性能指标
+        doc_analyze_time = round(time.time() - doc_analyze_start, 2)
+        doc_analyze_speed = round(total_pages / doc_analyze_time, 2)
+        logger.info(
+            f'文档分析总耗时: {doc_analyze_time}秒, '
+            f'处理速度: {doc_analyze_speed} 页/秒, '
+            f'总页数: {total_pages}'
+        )
 
-    else:
-        # single analyze
+        return InferenceResult(model_json, dataset)
 
-        for index in range(len(dataset)):
-            page_data = dataset.get_page(index)
-            img_dict = page_data.get_image()
-            img = img_dict['img']
-            page_width = img_dict['width']
-            page_height = img_dict['height']
-            if start_page_id <= index <= end_page_id:
-                page_start = time.time()
-                result = custom_model(img)
-                logger.info(f'-----page_id : {index}, page total time: {round(time.time() - page_start, 2)}-----')
-            else:
-                result = []
-
-            page_info = {'page_no': index, 'width': page_width, 'height': page_height}
-            page_dict = {'layout_dets': result, 'page_info': page_info}
-            model_json.append(page_dict)
-
-    gc_start = time.time()
-    clean_memory(get_device())
-    gc_time = round(time.time() - gc_start, 2)
-    logger.info(f'gc time: {gc_time}')
-
-    doc_analyze_time = round(time.time() - doc_analyze_start, 2)
-    doc_analyze_speed = round((end_page_id + 1 - start_page_id) / doc_analyze_time, 2)
-    logger.info(
-        f'doc analyze time: {round(time.time() - doc_analyze_start, 2)},'
-        f' speed: {doc_analyze_speed} pages/second'
-    )
-
-    return InferenceResult(model_json, dataset)
+    except Exception as e:
+        logger.error(f"文档分析失败: {str(e)}")
+        raise
